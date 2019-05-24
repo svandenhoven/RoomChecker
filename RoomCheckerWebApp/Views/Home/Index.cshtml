@@ -1,0 +1,18 @@
+﻿<!--  Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license.
+        See LICENSE in the source repository root for complete license information. -->
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h2>Availability of rooms in Microsoft Outlook at Schiphol</h2>
+
+@if (!User.Identity.IsAuthenticated)
+{
+    <br />
+    <p>Choose <b>Sign in</b> at the top of the page and sign in with your work or school account.</p>
+}
+@if (User.Identity.IsAuthenticated)
+{    
+    <p>Go to Rooms to see what rooms are available the next hour.</p>
+}

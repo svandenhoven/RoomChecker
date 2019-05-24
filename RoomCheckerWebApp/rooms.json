@@ -1,0 +1,9 @@
+[
+  {
+    "id": "room@contoso.com",
+    "available": true,
+    "name": "666",
+    "floor": 1,
+    "type": "external"
+  }
+]

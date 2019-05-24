@@ -1,0 +1,124 @@
+﻿@model IEnumerable<MicrosoftGraphAspNetCoreConnectSample.Models.Room>
+
+@{
+    ViewData["Title"] = "Rooms at " + DateTime.Now.ToShortTimeString();
+}
+
+@{
+    Layout = "_TeamsLayout";
+}
+
+
+@if (!User.Identity.IsAuthenticated)
+{
+    <p>@(ViewBag.Message)</p>
+    <button type="button" class="btn btn-primary" onclick="javascript:window.location='/Account/SignInTeams'">Sign In</button>
+}
+else
+{
+    <H1><div id="timeTitle"></div></H1>
+    <button type="button" class="btn btn-primary" onclick="javascript: SetStatus()">Refresh All</button>
+}
+
+
+@foreach (var floor in Model.GroupBy(r => r.Floor))
+{
+
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1 class="display-4">Floor @(floor.Key)</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Name)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Available)
+                        </th>
+                        <th>
+
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Model.Where(r => r.Floor == floor.Key))
+                    {
+                        <tr>
+                            <td>
+                                <b>@Html.DisplayFor(modelItem => item.Name) <span class="badge badge-primary">@(item.Type)</span></b>
+                            </td>
+                            <td id="cell_@(item.Name)">
+                                <div id="status_@(item.Name)">@(item.Available ? "Checking..." : "Occupied." + (item.FreeAt.Date == DateTime.Now.Date ? " Free at: " + item.FreeAt.ToString("HH:mm") : ""))</div>
+                            </td>
+                            <td>
+                                <!--@(item.ReservedBy == null ? Html.ActionLink("Reserve for Ad Hoc Meeting", "Reserve", "Home", new { id = item.Id })
+                                                                    : Html.DisplayFor(modelItem => item.ReservedBy))-->
+
+                                @if (item.ReservedBy == "" || item.ReservedBy == null)
+                                {
+                                    <button type="button" class="btn btn-outline-primary" onclick="javascript:GetRoomStatus('@(item.Name)');">Refresh</button>
+                                }
+                                @if (item.ReservedBy != "")
+                                {
+                                    @Html.DisplayFor(modelItem => item.ReservedBy)
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+}
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+
+
+<script>
+    var rooms = [];
+    @foreach (var d in Model)
+    {
+            @:rooms.push("@d.Name");
+    }
+
+    $(document).ready(SetStatus);
+
+    function SetStatus() {
+        rooms.forEach(function (room) {
+            $('#timeTitle').text('Rooms available at ' + new Date().getHours() + ":" + new Date().getMinutes());
+            GetRoomStatus(room);
+        });
+
+    }
+
+    function GetRoomStatus(id) {
+
+        var cell = document.getElementById('cell_' + id);
+        cell.style.backgroundColor = "";
+        $('#status_' + id).text('Refreshing ...');
+
+        $.getJSON("/Home/GetRoomStatus",
+            {
+                roomId: id
+            },
+            function (data) {
+                if (data.available) {
+
+                    $('#status_' + id).text('Free until ' + data.freeAt.substring(11, 16));
+                    var cell = document.getElementById('cell_' + data.name);
+                    cell.style.backgroundColor = "lightgreen";
+
+                }
+                else {
+                    $('#status_' + id).text('Occupied, free at ' + data.freeAt.substring(11, 16));
+                    var cell = document.getElementById('cell_' + data.name);
+                    cell.style.backgroundColor = "pink";
+                }
+            });
+
+    }
+</script>
