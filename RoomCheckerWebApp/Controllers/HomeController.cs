@@ -65,6 +65,29 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
+        public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime)
+        {
+            var checkDateTime = DateTime.Parse(dateTime);
+            var room = GetRooms().Where<Room>(r => r.Name == roomId).First();
+
+            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
+            var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
+
+            room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, checkDateTime);
+            if (room.Nodes != null)
+            {
+                var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                if (roomNodes != null)
+                {
+                    var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
+                    room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
+                }
+
+
+            }
+            return Json(room);
+        }
+
         public async Task<JsonResult> GetRoomStatus(string roomId)
         {
             var room = GetRooms().Where<Room>(r => r.Name == roomId).First();
@@ -93,7 +116,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
                     var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
                     var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
-                    room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext);
+                    room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, DateTime.Now);
                     if (room.Nodes != null)
                     {
                         var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);

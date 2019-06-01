@@ -26,13 +26,13 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
             var roomsAvailability = new List<Room>();
             foreach (var room in rooms)
             {
-                roomsAvailability.Add(await GraphService.GetRoomAvailability(graphClient, room, httpContext));
+                roomsAvailability.Add(await GraphService.GetRoomAvailability(graphClient, room, httpContext, DateTime.Now));
             }
             //RoomsCache.Cache = roomsAvailability;
             return roomsAvailability;
         }
 
-        public static async Task<Room> GetRoomAvailability(GraphServiceClient graphClient, Room room, HttpContext httpContext)
+        public static async Task<Room> GetRoomAvailability(GraphServiceClient graphClient, Room room, HttpContext httpContext, DateTime dateTime)
         {
             var roomRecent = new Room
             {
@@ -49,8 +49,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
             try
             {
-                QueryOption startDateTime = new QueryOption("startDateTime", DateTime.Now.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-                QueryOption endDateTime = new QueryOption("endDateTime", DateTime.Now.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ"));
+                QueryOption startDateTime = new QueryOption("startDateTime", dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+                QueryOption endDateTime = new QueryOption("endDateTime", dateTime.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ"));
                 List<QueryOption> options = new List<QueryOption>
                 {
                     startDateTime,
@@ -73,8 +73,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                     var roomBusy = false;
                     for(var s=0; s<scheduleArray.Length; s++) 
                     {
-                        if(DateTime.Parse(scheduleArray[s].Start.DateTime) <= DateTime.UtcNow 
-                            && DateTime.Parse(scheduleArray[s].End.DateTime) > DateTime.UtcNow)
+                        if(DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime() 
+                            && DateTime.Parse(scheduleArray[s].End.DateTime) > dateTime.ToUniversalTime())
                         {
                             //Event is now
                             roomBusy = true;
@@ -87,15 +87,15 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             }
 
                         }
-                        if (DateTime.Parse(scheduleArray[s].Start.DateTime) <= DateTime.UtcNow 
-                            && DateTime.Parse(scheduleArray[s].End.DateTime) < DateTime.UtcNow)
+                        if (DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime()
+                            && DateTime.Parse(scheduleArray[s].End.DateTime) < dateTime.ToUniversalTime())
                         {
                             //Event has happenend
                             if(!roomBusy)
                                 roomRecent.Available = true;
                         }
-                        if (DateTime.Parse(scheduleArray[s].Start.DateTime) >= DateTime.UtcNow 
-                            && DateTime.Parse(scheduleArray[s].End.DateTime) > DateTime.UtcNow)
+                        if (DateTime.Parse(scheduleArray[s].Start.DateTime) >= dateTime.ToUniversalTime()
+                            && DateTime.Parse(scheduleArray[s].End.DateTime) > dateTime.ToUniversalTime())
                         {
                             //Event needs to happen
                             if(roomRecent.Available)
