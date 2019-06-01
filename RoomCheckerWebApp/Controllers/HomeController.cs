@@ -74,17 +74,6 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
 
             room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, checkDateTime);
-            if (room.Nodes != null)
-            {
-                var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
-                if (roomNodes != null)
-                {
-                    var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
-                    room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
-                }
-
-
-            }
             return Json(room);
         }
 
