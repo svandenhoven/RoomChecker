@@ -101,10 +101,20 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             && DateTime.Parse(scheduleArray[s].End.DateTime) > dateTime.ToUniversalTime())
                         {
                             //Event needs to happen
-                            if(roomRecent.Available)
+                            if(dateTime.Date == DateTime.Now.Date)
                             {
-                                roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].Start.DateTime), cetTime);
+                                //today
+                                if (roomRecent.Available)
+                                {
+                                    roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].Start.DateTime), cetTime);
+                                }
                             }
+                            else
+                            {
+                                //not today
+                                roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime);
+                            }
+
 
                         }
                     }

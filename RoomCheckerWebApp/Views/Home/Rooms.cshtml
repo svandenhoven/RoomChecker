@@ -170,8 +170,15 @@ else
                     $('#status_' + id).text('Free');
                     if (data.freeUntil != '0001-01-01T00:00:00')
                         $('#planning_' + id).text('until ' + data.freeUntil.substring(11, 16));
-                    else
-                        $('#planning_' + id).text('rest of day');
+                    else {
+                        if (data.freeAt != '0001-01-01T00:00:00') {
+                            $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
+                        }
+                        else {
+                            $('#planning_' + id).text('rest of day');
+                        }
+                    }
+                        
                     var cell = document.getElementById('item_' + data.name);
                     cell.style.backgroundColor = "lightgreen";
 
