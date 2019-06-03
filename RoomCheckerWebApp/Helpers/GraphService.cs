@@ -37,7 +37,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
             var roomRecent = new Room
             {
                 Id = room.Id,
-                Available = false,
+                Available = true,
                 Name = room.Name,
                 ReservedBy = "",
                 Floor = room.Floor,
@@ -82,8 +82,9 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime);
                             if(s < scheduleArray.Length-1)
                             {
-                                if(DateTime.Parse(scheduleArray[s + 1].Start.DateTime) > DateTime.Parse(scheduleArray[s].End.DateTime))
+                                if(DateTime.Parse(scheduleArray[s + 1].Start.DateTime) >= DateTime.Parse(scheduleArray[s].End.DateTime))
                                     roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s+1].Start.DateTime), cetTime);
+                                    roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s+1].End.DateTime), cetTime);
                             }
 
                         }

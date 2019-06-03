@@ -138,10 +138,10 @@ else
 
     function SetStatusOnDate() {
         var dt = document.getElementById('checkTime');
-        $('#timeTitle').text('Rooms available today at ' + dt.value);
+        $('#timeTitle').text('Rooms available on ' + dt.value.slice(0, 10) + ' at ' + dt.value.slice(11, 16));
 
         rooms.forEach(function (room) {
-            GetRoomStatusOnDate(room);
+            GetRoomStatusOnDate(room, false);
         });
 
     }
@@ -151,7 +151,7 @@ else
 
     }
 
-    function GetRoomStatusOnDate(id) {
+    function GetRoomStatusOnDate(id, showbGrid) {
         var cell = document.getElementById('item_' + id);
         cell.style.backgroundColor = "";
         $('#status_' + id).text('Refreshing');
@@ -166,52 +166,29 @@ else
             },
             function (data) {
                 if (data.available) {
+
                     $('#status_' + id).text('Free');
+                    if (data.freeUntil != '0001-01-01T00:00:00')
+                        $('#planning_' + id).text('until ' + data.freeUntil.substring(11, 16));
+                    else
+                        $('#planning_' + id).text('rest of day');
                     var cell = document.getElementById('item_' + data.name);
                     cell.style.backgroundColor = "lightgreen";
+
                 }
                 else {
                     $('#status_' + id).text('Reserved');
+                    if (data.freeAt != '0001-01-01T00:00:00')
+                        $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
+                    else
+                        $('#planning_' + id).text('rest of day');
                     var cell = document.getElementById('item_' + data.name);
                     cell.style.backgroundColor = "pink";
                 }
-            });
-    }
 
+                var label = document.getElementById('occupied_' + data.name);
+                if (showbGrid) {
 
-        function GetRoomStatus(id) {
-            var cell = document.getElementById('item_' + id);
-            cell.style.backgroundColor = "";
-            $('#status_' + id).text('Refreshing');
-            $('#planning_' + id).text('...');
-
-            $.getJSON("/Home/GetRoomStatus",
-                {
-                    roomId: id
-                },
-                function (data) {
-                    if (data.available) {
-
-                        $('#status_' + id).text('Free');
-                        if (data.freeAt != '0001-01-01T00:00:00')
-                            $('#planning_' + id).text('until ' + data.freeAt.substring(11, 16));
-                        else
-                            $('#planning_' + id).text('rest of day');
-                        var cell = document.getElementById('item_' + data.name);
-                        cell.style.backgroundColor = "lightgreen";
-
-                    }
-                    else {
-                        $('#status_' + id).text('Reserved');
-                        if (data.freeAt != '0001-01-01T00:00:00')
-                            $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
-                        else
-                            $('#planning_' + id).text('rest of day');
-                        var cell = document.getElementById('item_' + data.name);
-                        cell.style.backgroundColor = "pink";
-                    }
-
-                    var label = document.getElementById('occupied_' + data.name);
                     switch (data.occupied) {
                         case 0:
                             label.className = 'label label-success';
@@ -230,7 +207,18 @@ else
                             label.style.visibility = "hidden";
                             break;
                     }
-                });
+                }
+                else {
+                    label.className = 'label label-default';
+                    label.style.visibility = "hidden";
+                }
+            });
+    }
 
+
+        function GetRoomStatus(id) {
+            var dt = document.getElementById('checkTime');
+            dt.value = getDateString();
+            GetRoomStatusOnDate(id, true);
         }
 </script>

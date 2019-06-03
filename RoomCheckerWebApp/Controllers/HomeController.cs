@@ -67,64 +67,45 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime)
         {
-            var checkDateTime = DateTime.Parse(dateTime);
+             var checkDateTime = DateTime.Parse(dateTime);
+
+            TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
+            checkDateTime = TimeZoneInfo.ConvertTimeToUtc(checkDateTime, tz);
+
             var room = GetRooms().Where<Room>(r => r.Name == roomId).First();
 
-            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-            var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
-
-            room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, checkDateTime);
-            return Json(room);
-        }
-
-        public async Task<JsonResult> GetRoomStatus(string roomId)
-        {
-            var room = GetRooms().Where<Room>(r => r.Name == roomId).First();
-
-            if (User.Identity.IsAuthenticated)
+            if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
             {
-                var identity = (ClaimsIdentity)User.Identity;
-                if (identity != null && identity.Claims != null && identity.Claims.Any())
-                {
-                    var upn = identity.FindFirst(ClaimTypes.Upn);
-                }
-                
+                _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _roomsConfig);
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
+            }
+            else
+            {
+                _roomOccupancies = cachedRoomOccupancies;
+            }
 
-                if (!_cache.TryGetValue(roomId, out Room cachedRoom))
+            if (!_cache.TryGetValue(roomId, out Room cachedRoom))
+            {
+                var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
+                var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
+                room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, DateTime.Now);
+                if (room.Nodes != null)
                 {
-                    if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
+                    var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                    if (roomNodes != null)
                     {
-                        _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office",_roomsConfig);
-                        var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                        _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
+                        var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
+                        room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
                     }
-                    else
-                    {
-                        _roomOccupancies = cachedRoomOccupancies;
-                    }
-
-                    var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-                    var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
-                    room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, DateTime.Now);
-                    if (room.Nodes != null)
-                    {
-                        var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
-                        if (roomNodes != null)
-                        {
-                            var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
-                            room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
-                        }
-
-                        
-                    }
-                    // Save data in cache.
-                    var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                    _cache.Set(roomId, room, cacheEntryOptions);
                 }
-                else
-                {
-                    room = cachedRoom;
-                }
+                // Save data in cache.
+                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set(roomId, room, cacheEntryOptions);
+            }
+            else
+            {
+                room = cachedRoom;
             }
 
             return Json(room);
