@@ -67,7 +67,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime)
         {
-             var checkDateTime = DateTime.Parse(dateTime);
+            var checkDateTime = DateTime.Parse(dateTime);
+            var timediff = DateTime.Now - checkDateTime;
 
             TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
             checkDateTime = TimeZoneInfo.ConvertTimeToUtc(checkDateTime, tz);
@@ -85,30 +86,44 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 _roomOccupancies = cachedRoomOccupancies;
             }
 
-            if (!_cache.TryGetValue(roomId, out Room cachedRoom))
+            if (Math.Abs(timediff.TotalMinutes) > 30)
             {
-                var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-                var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
-                room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, DateTime.Now);
-                if (room.Nodes != null)
-                {
-                    var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
-                    if (roomNodes != null)
-                    {
-                        var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
-                        room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
-                    }
-                }
-                // Save data in cache.
-                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set(roomId, room, cacheEntryOptions);
+                room = await GetRoomData(room, checkDateTime);
             }
             else
             {
-                room = cachedRoom;
+                if (!_cache.TryGetValue(roomId, out Room cachedRoom))
+                {
+                    room = await GetRoomData(room, checkDateTime);
+                    // Save data in cache.
+                    var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                    _cache.Set(roomId, room, cacheEntryOptions);
+                }
+                else
+                {
+                    room = cachedRoom;
+                }
             }
 
             return Json(room);
+        }
+
+        private async Task<Room> GetRoomData(Room room, DateTime dt)
+        {
+            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
+            var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
+            room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
+            if (room.Nodes != null)
+            {
+                var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                if (roomNodes != null)
+                {
+                    var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
+                    room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
+                }
+            }
+
+            return room;
         }
 
         [Authorize]
