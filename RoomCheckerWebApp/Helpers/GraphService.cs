@@ -82,9 +82,11 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime);
                             if(s < scheduleArray.Length-1)
                             {
-                                if(DateTime.Parse(scheduleArray[s + 1].Start.DateTime) >= DateTime.Parse(scheduleArray[s].End.DateTime))
-                                    roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s+1].Start.DateTime), cetTime);
-                                    roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s+1].End.DateTime), cetTime);
+                                if (DateTime.Parse(scheduleArray[s + 1].Start.DateTime) >= DateTime.Parse(scheduleArray[s].End.DateTime))
+                                {
+                                    roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].Start.DateTime), cetTime);
+                                    roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].End.DateTime), cetTime);
+                                }
                             }
 
                         }
@@ -109,8 +111,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                 }
                 return roomRecent;
             }
-            catch (ServiceException e)
-            {
+            catch (ServiceException e)            {
                 roomRecent.Available = false;
                 roomRecent.ReservedBy = "Contact Hospitality Team";
                 return roomRecent;
