@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
+using RoomChecker.Controllers;
 
 namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 {
@@ -25,7 +26,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         [HttpGet]
         public IActionResult SignInTeams()
         {
-            var redirectUrl = Url.Action(nameof(HomeController.TeamsRooms), "Home");
+            var redirectUrl = Url.Action(nameof(AuthController.SilentEnd), "Auth");
             return Challenge(
                 new AuthenticationProperties { RedirectUri = redirectUrl },
                 OpenIdConnectDefaults.AuthenticationScheme);

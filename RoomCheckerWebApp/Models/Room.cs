@@ -12,6 +12,15 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
     }
     public class Room
     {
+        public Room(int hours)
+        {
+            DaySchedule = new int[hours];
+            for (int i = 0; i < hours; i++)
+            {
+                DaySchedule[i] = 0;
+            }
+        }
+
         public string Id { get; set; }
         public string Name { get; set; }
         public string ReservedBy { get; set; }
@@ -22,6 +31,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
         public DateTime FreeUntil { get; set; }
         public string Features { get; set; }
         public int Occupied { get; set; }
+        public int[] DaySchedule { get; set; }
         public List<Node> Nodes { get; set; }
+
     }
 }

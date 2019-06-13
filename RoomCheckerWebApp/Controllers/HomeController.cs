@@ -186,19 +186,10 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> TeamsRooms()
+        public IActionResult TeamsRooms()
         {
-            if (User.Identity.IsAuthenticated)
-            {
                 var rooms = GetRooms();
-                ViewBag.Message = "";
                 return View(rooms);
-            }
-            else
-            {
-                ViewBag.Message = "Please Sign-In first.";
-                return View(new List<Room>());
-            }
         }
 
         private List<Room> GetRooms()

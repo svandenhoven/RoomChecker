@@ -11,7 +11,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "https://localhost:44334/",
+      "launchUrl": "https://localhost:44334/home/teamsrooms",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

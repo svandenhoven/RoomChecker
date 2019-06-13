@@ -34,7 +34,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
         public static async Task<Room> GetRoomAvailability(GraphServiceClient graphClient, Room room, HttpContext httpContext, DateTime dateTime)
         {
-            var roomRecent = new Room
+            var roomRecent = new Room(24)
             {
                 Id = room.Id,
                 Available = true,
@@ -73,7 +73,24 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                     var roomBusy = false;
                     for(var s=0; s<scheduleArray.Length; s++) 
                     {
-                        if(DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime() 
+                        var beginHour = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].Start.DateTime), cetTime).Hour;
+                        var endHour = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime).Hour;
+                        for(int t=beginHour; t <= endHour; t++)
+                        {
+                            if (t == endHour)
+                            {
+                                if (TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime).Minute > 0)
+                                {
+                                    roomRecent.DaySchedule[t] = 1;
+                                }
+                            }
+                            else
+                            {
+                                roomRecent.DaySchedule[t] = 1;
+                            }
+                        }
+
+                        if (DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime() 
                             && DateTime.Parse(scheduleArray[s].End.DateTime) > dateTime.ToUniversalTime())
                         {
                             //Event is now
