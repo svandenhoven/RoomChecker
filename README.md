@@ -7,4 +7,4 @@ You need to have a application registred in Azure AD with GraphAPI permission "C
 
 This documentation will be extended.
 
-![alt text](/roomcheck.jpg "Screenshot of Roomchecker")
+![alt text](/roomheck.jpg "Screenshot of Roomchecker")
