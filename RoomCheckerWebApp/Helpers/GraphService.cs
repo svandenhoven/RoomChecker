@@ -96,15 +96,21 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             //Event is now
                             roomBusy = true;
                             roomRecent.Available = false;
-                            roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime);
-                            if(s < scheduleArray.Length-1)
+                            if (roomRecent.FreeAt < TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime))
                             {
-                                if (DateTime.Parse(scheduleArray[s + 1].Start.DateTime) >= DateTime.Parse(scheduleArray[s].End.DateTime))
-                                {
-                                    roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].Start.DateTime), cetTime);
-                                    roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].End.DateTime), cetTime);
-                                }
+                                //if the end data of current meeting is after the enddate of a previous meeting
+                                roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime);
                             }
+
+                            //if(s < scheduleArray.Length-1)
+                            //{
+                            //    if (DateTime.Parse(scheduleArray[s + 1].Start.DateTime) >= DateTime.Parse(scheduleArray[s].End.DateTime))
+                            //    {
+                            //        //if there is next meeting starts after the this meeting record the time it is free
+                            //        roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].Start.DateTime), cetTime);
+                            //        roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].End.DateTime), cetTime);
+                            //    }
+                            //}
 
                         }
                         if (DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime()
@@ -121,7 +127,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             if(dateTime.Date == DateTime.Now.Date)
                             {
                                 //today
-                                if (roomRecent.Available)
+                                if (roomRecent.Available && roomRecent.FreeUntil == default(DateTime))
                                 {
                                     roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].Start.DateTime), cetTime);
                                 }
@@ -138,9 +144,14 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                 }
                 return roomRecent;
             }
-            catch (ServiceException e)            {
+            catch (ServiceException e)
+            {
                 roomRecent.Available = false;
                 roomRecent.ReservedBy = "Contact Hospitality Team";
+                for (int i = 0; i < roomRecent.DaySchedule.Length-1; i++)
+                {
+                    roomRecent.DaySchedule[i] = -1;
+                }
                 return roomRecent;
             }
         }
