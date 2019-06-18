@@ -34,19 +34,41 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
         public static async Task<Room> GetRoomAvailability(GraphServiceClient graphClient, Room room, HttpContext httpContext, DateTime dateTime)
         {
-            var roomRecent = new Room(24)
+            Room roomRecent = new Room(24)
             {
                 Id = room.Id,
+                HasMailBox = room.HasMailBox,
                 Available = true,
                 Name = room.Name,
                 ReservedBy = "",
+                RoomType = room.RoomType,
                 Floor = room.Floor,
                 Type = room.Type,
                 Features = "",
                 Occupied = -1,
-                Nodes = room.Nodes
+                Nodes = room.Nodes,
+                Capacity = room.Capacity,
+                AudioVideo = room.AudioVideo
             };
 
+            if (roomRecent.HasMailBox)
+            {
+                return await GetRoomSchedule(graphClient, room, dateTime, roomRecent);
+            }
+            else
+            {
+                roomRecent.Available = false;
+                roomRecent.ReservedBy = "Contact Hospitality Team";
+                for (int i = 0; i < roomRecent.DaySchedule.Length - 1; i++)
+                {
+                    roomRecent.DaySchedule[i] = -1;
+                }
+                return roomRecent;
+            }
+        }
+
+        private static async Task<Room> GetRoomSchedule(GraphServiceClient graphClient, Room room, DateTime dateTime, Room roomRecent)
+        {
             try
             {
                 QueryOption startDateTime = new QueryOption("startDateTime", dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"));
@@ -58,7 +80,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                 };
 
                 var roomSchedules = await graphClient.Users[room.Id].CalendarView.Request(options).GetAsync();
-                
+
                 if (roomSchedules.Count == 0)
                 {
                     roomRecent.Available = true;
@@ -71,11 +93,11 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                     var scheduleArray = orderedRoomSchedules.ToArray();
 
                     var roomBusy = false;
-                    for(var s=0; s<scheduleArray.Length; s++) 
+                    for (var s = 0; s < scheduleArray.Length; s++)
                     {
                         var beginHour = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].Start.DateTime), cetTime).Hour;
                         var endHour = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime).Hour;
-                        for(int t=beginHour; t <= endHour; t++)
+                        for (int t = beginHour; t <= endHour; t++)
                         {
                             if (t == endHour)
                             {
@@ -90,7 +112,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             }
                         }
 
-                        if (DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime() 
+                        if (DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime()
                             && DateTime.Parse(scheduleArray[s].End.DateTime) > dateTime.ToUniversalTime())
                         {
                             //Event is now
@@ -117,14 +139,14 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                             && DateTime.Parse(scheduleArray[s].End.DateTime) < dateTime.ToUniversalTime())
                         {
                             //Event has happenend
-                            if(!roomBusy)
+                            if (!roomBusy)
                                 roomRecent.Available = true;
                         }
                         if (DateTime.Parse(scheduleArray[s].Start.DateTime) >= dateTime.ToUniversalTime()
                             && DateTime.Parse(scheduleArray[s].End.DateTime) > dateTime.ToUniversalTime())
                         {
                             //Event needs to happen
-                            if(dateTime.Date == DateTime.Now.Date)
+                            if (dateTime.Date == DateTime.Now.Date)
                             {
                                 //today
                                 if (roomRecent.Available && roomRecent.FreeUntil == default(DateTime))
@@ -148,7 +170,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
             {
                 roomRecent.Available = false;
                 roomRecent.ReservedBy = "Contact Hospitality Team";
-                for (int i = 0; i < roomRecent.DaySchedule.Length-1; i++)
+                for (int i = 0; i < roomRecent.DaySchedule.Length - 1; i++)
                 {
                     roomRecent.DaySchedule[i] = -1;
                 }
@@ -156,7 +178,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
             }
         }
 
-            // Load user's profile in formatted JSON.
+        // Load user's profile in formatted JSON.
         public static async Task<string> GetUserJson(GraphServiceClient graphClient, string email, HttpContext httpContext)
         {
             if (email == null) return JsonConvert.SerializeObject(new { Message = "Email address cannot be null." }, Formatting.Indented);

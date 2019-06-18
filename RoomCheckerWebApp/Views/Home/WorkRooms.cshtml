@@ -169,7 +169,7 @@ else
     function SetStatus() {
         var dt = document.getElementById('checkTime');
         dt.value = getDateString();
-        $('#timeTitle').text('Meeting Rooms available at ' + n(new Date().getHours()) + ":" + n(new Date().getMinutes()));
+        $('#timeTitle').text('Work Rooms available at ' + n(new Date().getHours()) + ":" + n(new Date().getMinutes()));
 
         rooms.forEach(function (room) {
             GetRoomStatus(room);
@@ -179,7 +179,7 @@ else
 
     function SetStatusOnDate() {
         var dt = document.getElementById('checkTime');
-        $('#timeTitle').text('Meeting Rooms available on ' + dt.value.slice(0, 10) + ' at ' + dt.value.slice(11, 16));
+        $('#timeTitle').text('Work Rooms available on ' + dt.value.slice(0, 10) + ' at ' + dt.value.slice(11, 16));
 
         rooms.forEach(function (room) {
             GetRoomStatusOnDate(room, false);
@@ -208,7 +208,7 @@ else
             {
                 roomId: id,
                 dateTime: dt,
-                type: 'meet'
+                type: 'work'
             },
             function (data) {
                 if (data.hasMailBox) {

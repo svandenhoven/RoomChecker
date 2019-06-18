@@ -65,7 +65,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
-        public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime)
+         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
         {
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;
@@ -73,7 +73,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
             checkDateTime = TimeZoneInfo.ConvertTimeToUtc(checkDateTime, tz);
 
-            var room = GetRooms().Where<Room>(r => r.Name == roomId).First();
+            var room = GetRooms(type).Where<Room>(r => r.Name == roomId).First();
 
             if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
             {
@@ -141,7 +141,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 {
                     _roomOccupancies = cachedRoomOccupancies;
                 }
-                var rooms = GetRooms();
+                var rooms = GetRooms("meet");
                 ViewBag.Message = "";
                 return View(rooms);
             }
@@ -185,21 +185,48 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
         }
 
+        [Authorize]
+        public async Task<IActionResult> WorkRooms()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
+                {
+                    _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _roomsConfig);
+                    var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(60));
+                    _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
+                }
+                else
+                {
+                    _roomOccupancies = cachedRoomOccupancies;
+                }
+                var rooms = GetRooms("work");
+                ViewBag.Message = "";
+                return View(rooms);
+            }
+            else
+            {
+                ViewBag.Message = "Please Sign-In first.";
+                return View(new List<Room>());
+            }
+        }
+
         [AllowAnonymous]
         public IActionResult TeamsRooms()
         {
-                var rooms = GetRooms();
+                var rooms = GetRooms("meet");
                 return View(rooms);
         }
 
-        private List<Room> GetRooms()
+        private List<Room> GetRooms(string type)
         {
-            return ReadRooms(_roomsConfig);
+            return ReadRooms(_roomsConfig, type);
         }
 
-        private List<Room> ReadRooms(IOptions<RoomsConfig> roomsConfig)
+
+        private List<Room> ReadRooms(IOptions<RoomsConfig> roomsConfig, string roomType)
         {
-            if (!_cache.TryGetValue("roomslist", out List<Room> cachedRooms))
+            if (!_cache.TryGetValue(roomType+"roomslist", out List<Room> cachedRooms))
             {
                 List<Room> rooms = new List<Room>();
                 if (roomsConfig.Value == null)
@@ -222,7 +249,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                         break;
                 }
 
-                rooms = rooms.OrderBy(r => r.Name).ToList<Room>();
+                rooms = rooms.Where(r => r.RoomType == roomType).OrderBy(r => r.Name).ToList<Room>();
                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
                 _cache.Set("roomslist", rooms, cacheEntryOptions);
                 return rooms;

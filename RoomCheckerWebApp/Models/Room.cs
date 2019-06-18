@@ -22,10 +22,12 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
         }
 
         public string Id { get; set; }
+        public bool HasMailBox { get; set; }
         public string Name { get; set; }
         public string ReservedBy { get; set; }
         public bool Available { get; set; }
         public int Floor { get; set; }
+        public string RoomType { get; set; }
         public string Type { get; set; }
         public DateTime FreeAt { get; set; }
         public DateTime FreeUntil { get; set; }
@@ -33,6 +35,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
         public int Occupied { get; set; }
         public int[] DaySchedule { get; set; }
         public List<Node> Nodes { get; set; }
-
+        public int Capacity { get; set; }
+        public string AudioVideo { get; set; }
     }
 }

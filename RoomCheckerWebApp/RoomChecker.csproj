@@ -27,6 +27,9 @@
     <Content Update="rooms.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="Views\Home\WorkRooms.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Home\TeamsRooms.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
