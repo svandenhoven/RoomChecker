@@ -57,6 +57,11 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
+        public IActionResult Dashboard()
+        {
+            return View();
+        }
+
         [AllowAnonymous]
         // Load user's profile.
         public async Task<IActionResult> Reserve(string Id)
