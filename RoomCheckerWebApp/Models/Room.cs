@@ -37,5 +37,6 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
         public List<Node> Nodes { get; set; }
         public int Capacity { get; set; }
         public string AudioVideo { get; set; }
+        public decimal Temperature { get; set; }
     }
 }

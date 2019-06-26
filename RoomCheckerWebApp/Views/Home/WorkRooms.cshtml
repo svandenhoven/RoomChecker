@@ -6,6 +6,8 @@
 
 <link rel="stylesheet" href="~/css/roomcheckerstyle1.css" />
 
+<link rel="stylesheet" href="~/css/roomcheckerstyle1.css" />
+
 @if (!User.Identity.IsAuthenticated)
 {
     <p>@(ViewBag.Message)</p>
@@ -19,211 +21,74 @@ else
     <p></p>
     <input type="datetime-local" name="checkTime" id="checkTime">
     <button type="button" class="btn btn-primary" onclick="javascript: SetStatusOnDate()">Check Date</button>
+    <p></p>
+    @foreach (var floor in Model.GroupBy(r => r.Floor))
+    {
+        <button type="button" onclick="javascript:toggleFloorButton(this)" class="btn btn-primary" data-toggle="collapse" data-target="#F-@floor.Key">@floor.Key</button>
+    }
 }
 
 <p></p>
 
 @foreach (var floor in Model.GroupBy(r => r.Floor))
 {
-    <p></p>
-    @foreach (var type in Model.Where(r => r.Floor == floor.Key).GroupBy(t => t.Type))
-    {
-    <fieldset class="scheduler-border">
-        <legend class="scheduler-border">@type.Key.First().ToString().ToUpper()@type.Key.Substring(1) Rooms on Floor @(floor.Key)</legend>
-        @foreach (var item in Model.Where(r => r.Floor == floor.Key && r.Type == type.Key))
+    <div id="F-@floor.Key" class="collapse in">
+        @foreach (var type in Model.Where(r => r.Floor == floor.Key).GroupBy(t => t.Type))
         {
-            <div class="gallery" id="item_@(item.Name)" onclick="javascript:GetRoomStatus(@(item.Name))">
-                <div id="occupied_@(item.Name)" class="label label-default" style="visibility:hidden">&nbsp;</div>
-                <div class="roomName">@Html.DisplayFor(modelItem => item.Name)</div>
-                <div class="capacity">@Html.DisplayFor(modelItem => item.Capacity)p @Html.DisplayFor(modelItem => item.AudioVideo)</div>
-                <div class="desc">
-                    <div class="status" id="status_@(item.Name)">Checking...</div>
-                    <div class="planning" id="planning_@(item.Name)">&nbsp;</div>
-                </div>
-                <div id="scheduleLine">
-                    <table border="1" align="center">
-                        <tr>
-                            @for (int i = 8; i < 19; i++)
-                            {
-                                <td class="unknown" id="@(item.Name)-h-@i">
-                                    &nbsp;
-                                </td>
-                            }
+            <fieldset class="scheduler-border">
+                <legend class="scheduler-border">@type.Key.First().ToString().ToUpper()@type.Key.Substring(1) Rooms on Floor @(floor.Key)</legend>
+                @foreach (var item in Model.Where(r => r.Floor == floor.Key && r.Type == type.Key))
+                {
+                    <div class="gallery" id="item_@(item.Name)" onclick="javascript:GetRoomStatus(@(item.Name))">
+                        <div id="occupied_@(item.Name)" class="label label-default" style="visibility:hidden">&nbsp;</div>
+                        <div class="roomName">@Html.DisplayFor(modelItem => item.Name)</div>
+                        <div class="capacity">@Html.DisplayFor(modelItem => item.Capacity)p @Html.DisplayFor(modelItem => item.AudioVideo)</div>
+                        <div class="desc">
+                            <div class="status" id="status_@(item.Name)">Checking...</div>
+                            <div class="planning" id="planning_@(item.Name)">&nbsp;</div>
+                        </div>
+                        <div id="scheduleLine">
+                            <table border="1" align="center">
+                                <tr>
+                                    @for (int i = 8; i < 19; i++)
+                                    {
+                                        <td class="unknown" id="@(item.Name)-h-@i">
+                                            &nbsp;
+                                        </td>
+                                    }
 
-                        </tr>
-                        <tr>
-                            @for (int i = 8; i < 19; i++)
-                            {
-                                <td style="font-size:6px; text-align:center">
-                                    @i
-                                </td>
-                            }
-                        </tr>
-                    </table>
-                </div>
-                <span id="label_@(item.Name)" class="label label-default">@(item.Type) </span>
-            </div>
+                                </tr>
+                                <tr>
+                                    @for (int i = 8; i < 19; i++)
+                                    {
+                                        <td style="font-size:6px; text-align:center">
+                                            @i
+                                        </td>
+                                    }
+                                </tr>
+                            </table>
+                        </div>
+                        <span id="label_@(item.Name)" class="label label-default">@(item.Type) </span>
+                    </div>
+                }
+            </fieldset>
+
         }
-    </fieldset>
-        }
-    }
-
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-            crossorigin="anonymous"></script>
-
-    <script>
-    $(document).ready(function () {
-        var dt = document.getElementById('checkTime');
-        dt.value = getDateString();
-        SetStatus();
-    });
+    </div>
+}
 
 
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script>
     var rooms = [];
-
     @foreach (var d in Model)
     {
-        @:rooms.push("@d.Name");
+        @: rooms.push("@d.Name");
     }
+    var roomType = 'work';
+</script>
 
-
-
-    function getDateString() {
-        var dateobj = new Date();
-        var year = dateobj.getFullYear();
-        var month = ("0" + (dateobj.getMonth() + 1)).slice(-2);
-        var date = ("0" + dateobj.getDate()).slice(-2);
-        var hours = ("0" + dateobj.getHours()).slice(-2);
-        var minutes = ("0" + dateobj.getMinutes()).slice(-2);
-        return year + "-" + month + "-" + date + "T" + hours + ":"+minutes;
-    }
-
-    function SetStatus() {
-        var dt = document.getElementById('checkTime');
-        dt.value = getDateString();
-        $('#timeTitle').text('Work Rooms available at ' + n(new Date().getHours()) + ":" + n(new Date().getMinutes()));
-
-        rooms.forEach(function (room) {
-            GetRoomStatus(room);
-        });
-
-    }
-
-    function SetStatusOnDate() {
-        var dt = document.getElementById('checkTime');
-        $('#timeTitle').text('Work Rooms available on ' + dt.value.slice(0, 10) + ' at ' + dt.value.slice(11, 16));
-
-        rooms.forEach(function (room) {
-            GetRoomStatusOnDate(room, false);
-        });
-
-    }
-
-    function n(n) {
-        return n > 9 ? "" + n : "0" + n;
-
-    }
-
-    function GetRoomStatusOnDate(id, showbGrid) {
-        var cell = document.getElementById('item_' + id);
-        cell.style.backgroundColor = "";
-        $('#status_' + id).text('Refreshing');
-        $('#planning_' + id).text('...');
-        for (var i = 8; i < 19; i++) {
-            var cell = document.getElementById(id + '-h-' + i);
-            cell.className = 'unknown';
-        }
-
-        var dt = document.getElementById('checkTime').value;
-
-        $.getJSON("/Home/GetRoomStatusOnDate",
-            {
-                roomId: id,
-                dateTime: dt,
-                type: 'work'
-            },
-            function (data) {
-                if (data.hasMailBox) {
-                    if (data.available) {
-
-                        $('#status_' + id).text('Free');
-                        if (data.freeUntil != '0001-01-01T00:00:00')
-                            $('#planning_' + id).text('until ' + data.freeUntil.substring(11, 16));
-                        else {
-                            if (data.freeAt != '0001-01-01T00:00:00') {
-                                $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
-                            }
-                            else {
-                                $('#planning_' + id).text('rest of day');
-                            }
-                        }
-
-                        var cell = document.getElementById('item_' + data.name);
-                        cell.style.backgroundColor = "lightgreen";
-
-                    }
-                    else {
-                        $('#status_' + id).text('Reserved');
-                        if (data.freeAt != '0001-01-01T00:00:00')
-                            $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
-                        else
-                            $('#planning_' + id).text('rest of day');
-                        var cell = document.getElementById('item_' + data.name);
-                        cell.style.backgroundColor = "pink";
-                    }
-                }
-                else {
-                    $('#status_' + id).text('Free seating');
-                    $('#planning_' + id).text('');
-                    var cell = document.getElementById('item_' + data.name);
-                    cell.style.backgroundColor = "lightblue";
-                }
-
-                var label = document.getElementById('occupied_' + data.name);
-                if (showbGrid) {
-
-                    switch (data.occupied) {
-                        case 0:
-                            label.className = 'label label-success';
-                            label.style.visibility = "visible";
-                            break;
-                        case 1:
-                            label.className = 'label label-warning';
-                            label.style.visibility = "visible";
-                            break;
-                        case 2:
-                            label.className = 'label label-danger';
-                            label.style.visibility = "visible";
-                            break;
-                        default:
-                            label.className = 'label label-default';
-                            label.style.visibility = "hidden";
-                            break;
-                    }
-                }
-                else {
-                    label.className = 'label label-default';
-                    label.style.visibility = "hidden";
-                }
-
-                for (var i = 8; i < 19; i++) {
-                    if (data.daySchedule[i] == 1) {
-                        var cell = document.getElementById(id + '-h-' + i);
-                        cell.className = 'notfree';
-                    }
-                    if (data.daySchedule[i] == 0) {
-                        var cell = document.getElementById(id + '-h-' + i);
-                        cell.className = 'free';
-                    }
-                }
-            });
-    }
-
-
-        function GetRoomStatus(id) {
-            var dt = document.getElementById('checkTime');
-            dt.value = getDateString();
-            GetRoomStatusOnDate(id, true);
-        }
-    </script>
+<script src="~/js/RoomChecker.js">
+</script>

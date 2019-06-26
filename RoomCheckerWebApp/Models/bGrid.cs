@@ -11,6 +11,7 @@ namespace RoomChecker.Models
     //bGrid
     public class bGridTemperature
     {
+        public int location_id { get; set; }
         public int timestamp { get; set; }
         public float value { get; set; }
     }

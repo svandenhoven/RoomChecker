@@ -35,6 +35,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         private IMemoryCache _cache;
         private readonly IOptions<RoomsConfig> _roomsConfig;
         private List<bGridOccpancy> _roomOccupancies = new List<bGridOccpancy>();
+        private List<bGridTemperature> _roomTemperatures = new List<bGridTemperature>();
 
         public HomeController(IConfiguration configuration, IHostingEnvironment hostingEnvironment, IGraphSdkHelper graphSdkHelper, IMemoryCache memoryCache, IOptions<RoomsConfig> roomsConfig)
         {
@@ -91,6 +92,17 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 _roomOccupancies = cachedRoomOccupancies;
             }
 
+            if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
+            {
+                _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
+            }
+            else
+            {
+                _roomTemperatures = cachedRoomTemperatures;
+            }
+
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
                 room = await GetRoomData(room, checkDateTime);
@@ -126,6 +138,14 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                     var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
                     room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
                 }
+
+                var roomNodesTemp = _roomTemperatures.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                if (roomNodesTemp != null)
+                {
+                    var roomNodesTempLatest = roomNodesTemp.GroupBy(r => r.location_id).Select(ro => ro.OrderByDescending(x => x.timestamp).FirstOrDefault());
+                    var avgTemp = roomNodesTemp.Average(r => Convert.ToDecimal(r.value));
+                    room.Temperature = avgTemp;
+                }
             }
 
             return room;
@@ -146,6 +166,18 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 {
                     _roomOccupancies = cachedRoomOccupancies;
                 }
+
+                if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
+                {
+                    _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
+                    var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                    _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
+                }
+                else
+                {
+                    _roomTemperatures = cachedRoomTemperatures;
+                }
+
                 var rooms = GetRooms("meet");
                 ViewBag.Message = "";
                 return View(rooms);
@@ -205,6 +237,18 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 {
                     _roomOccupancies = cachedRoomOccupancies;
                 }
+
+                if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
+                {
+                    _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
+                    var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                    _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
+                }
+                else
+                {
+                    _roomTemperatures = cachedRoomTemperatures;
+                }
+
                 var rooms = GetRooms("work");
                 ViewBag.Message = "";
                 return View(rooms);
