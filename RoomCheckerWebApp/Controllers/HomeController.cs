@@ -23,6 +23,8 @@ using Newtonsoft.Json;
 using System.Security.Claims;
 using System.Net;
 using RoomChecker.Helpers;
+using Microsoft.Identity.Client;
+using MicrosoftGraphAspNetCoreConnectSample.Extensions;
 //using RoomChecker.Models;
 
 namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
@@ -48,7 +50,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
         [AllowAnonymous]
         // Load user's profile.
-        public async Task<IActionResult> Index(string email)
+        public IActionResult Index(string email)
         {
             if (User.Identity.IsAuthenticated)
             {
@@ -58,14 +60,19 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
+            //var azureOptions = new AzureAdOptions();
+            //_configuration.Bind("AzureAd", azureOptions);
+
+            //var embedService = new EmbedService(azureOptions);
+            //var result = await embedService.EmbedReport("", "");
             return View();
         }
 
         [AllowAnonymous]
         // Load user's profile.
-        public async Task<IActionResult> Reserve(string Id)
+        public IActionResult Reserve(string Id)
         {
             var id = Id;
             return View();

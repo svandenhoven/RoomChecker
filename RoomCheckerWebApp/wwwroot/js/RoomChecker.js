@@ -72,7 +72,7 @@ function GetRoomStatusOnDate(id, showbGrid) {
             if (data.hasMailBox) {
                 if (data.available) {
 
-                    $('#status_' + id).text('Free');
+                    $('#status_' + id).text('Available');
                     if (data.freeUntil !== '0001-01-01T00:00:00')
                         $('#planning_' + id).text('until ' + data.freeUntil.substring(11, 16));
                     else {
@@ -103,21 +103,24 @@ function GetRoomStatusOnDate(id, showbGrid) {
             var label = document.getElementById('occupied_' + data.name);
             if (showbGrid) {
 
-                label.innerText = data.temperature.toFixed(1) + "°C";
                 switch (data.occupied) {
                     case 0:
+                        label.innerText = 'Free ' + data.temperature.toFixed(1) + "°C";
                         label.className = 'label label-success';
                         label.style.visibility = "visible";
                         break;
                     case 1:
+                        label.innerText = 'Occupied ' + data.temperature.toFixed(1) + "°C";
                         label.className = 'label label-warning';
                         label.style.visibility = "visible";
                         break;
                     case 2:
+                        label.innerText = 'Occupied ' + data.temperature.toFixed(1) + "°C";
                         label.className = 'label label-danger';
                         label.style.visibility = "visible";
                         break;
                     default:
+                        label.innerText = data.temperature.toFixed(1) + "°C";
                         label.className = 'label label-default';
                         label.style.visibility = "hidden";
                         break;
