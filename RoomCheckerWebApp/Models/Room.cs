@@ -1,4 +1,5 @@
 ﻿using Microsoft.Graph;
+using RoomChecker.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
         }
 
         public string Id { get; set; }
+        public bGridIsland Island { get; set; }
         public bool HasMailBox { get; set; }
         public string Name { get; set; }
         public string ReservedBy { get; set; }

@@ -29,7 +29,7 @@ function SetStatus() {
     $('#timeTitle').text('Meeting Rooms available at ' + n(new Date().getHours()) + ":" + n(new Date().getMinutes()));
 
     rooms.forEach(function (room) {
-        GetRoomStatus(room);
+        //GetRoomStatus(room);
     });
 
 }
@@ -139,6 +139,17 @@ function GetRoomStatusOnDate(id, showbGrid) {
                 if (data.daySchedule[i] === 0) {
                     cell.className = 'free';
                 }
+            }
+
+            var lightButtonOn = document.getElementById('lightOn_' + data.name);
+            var lightButtonOff = document.getElementById('lightOff_' + data.name);
+            if (data.island.light_status === 'on') {
+                lightButtonOn.className = 'btn btn-primary';
+                lightButtonOff.className = 'btn btn-default';
+            }
+            else {
+                lightButtonOn.className = 'btn btn-default';
+                lightButtonOff.className = 'btn btn-primary';
             }
         });
 }

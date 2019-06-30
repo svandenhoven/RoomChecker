@@ -38,6 +38,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         private readonly IOptions<RoomsConfig> _roomsConfig;
         private List<bGridOccpancy> _roomOccupancies = new List<bGridOccpancy>();
         private List<bGridTemperature> _roomTemperatures = new List<bGridTemperature>();
+        private List<bGridIsland> _bGridIslands = new List<bGridIsland>();
 
         public HomeController(IConfiguration configuration, IHostingEnvironment hostingEnvironment, IGraphSdkHelper graphSdkHelper, IMemoryCache memoryCache, IOptions<RoomsConfig> roomsConfig)
         {
@@ -79,7 +80,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         }
 
          public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
-        {
+         {
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;
 
@@ -88,27 +89,9 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
             var room = GetRooms(type).Where<Room>(r => r.Name == roomId).First();
 
-            if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
-            {
-                _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _roomsConfig);
-                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
-            }
-            else
-            {
-                _roomOccupancies = cachedRoomOccupancies;
-            }
-
-            if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
-            {
-                _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
-                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
-            }
-            else
-            {
-                _roomTemperatures = cachedRoomTemperatures;
-            }
+            await GetbGridOccupancies();
+            await GetbGridTemperatures();
+            await GetbGridIslands();
 
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
@@ -144,6 +127,13 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 {
                     var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
                     room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
+
+                    //Get Associated Island
+                    var islands = _bGridIslands.Where(i => i.locations.Any(l => room.Nodes.Any(n => Convert.ToInt32(n.Id).Equals(l))));
+                    if(islands != null)
+                    {
+                        room.Island = islands.First();
+                    }
                 }
 
                 var roomNodesTemp = _roomTemperatures.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
@@ -159,31 +149,19 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         }
 
         [Authorize]
+        public IActionResult Bot()
+        {
+            return View();
+        }
+
+        [Authorize]
         public async Task<IActionResult> Rooms()
         {
             if (User.Identity.IsAuthenticated)
             {
-                if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
-                {
-                    _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office",_roomsConfig);
-                    var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(60));
-                    _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
-                }
-                else
-                {
-                    _roomOccupancies = cachedRoomOccupancies;
-                }
-
-                if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
-                {
-                    _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
-                    var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                    _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
-                }
-                else
-                {
-                    _roomTemperatures = cachedRoomTemperatures;
-                }
+                await GetbGridOccupancies();
+                await GetbGridTemperatures();
+                await GetbGridIslands();
 
                 var rooms = GetRooms("meet");
                 ViewBag.Message = "";
@@ -234,27 +212,9 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         {
             if (User.Identity.IsAuthenticated)
             {
-                if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
-                {
-                    _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _roomsConfig);
-                    var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(60));
-                    _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
-                }
-                else
-                {
-                    _roomOccupancies = cachedRoomOccupancies;
-                }
-
-                if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
-                {
-                    _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
-                    var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                    _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
-                }
-                else
-                {
-                    _roomTemperatures = cachedRoomTemperatures;
-                }
+                await GetbGridOccupancies();
+                await GetbGridTemperatures();
+                await GetbGridIslands();
 
                 var rooms = GetRooms("work");
                 ViewBag.Message = "";
@@ -270,8 +230,50 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         [AllowAnonymous]
         public IActionResult TeamsRooms()
         {
-                var rooms = GetRooms("meet");
-                return View(rooms);
+            var rooms = GetRooms("meet");
+            return View(rooms);
+        }
+
+        private async Task GetbGridTemperatures()
+        {
+            if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
+            {
+                _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
+            }
+            else
+            {
+                _roomTemperatures = cachedRoomTemperatures;
+            }
+        }
+
+        private async Task GetbGridOccupancies()
+        {
+            if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
+            {
+                _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _roomsConfig);
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
+            }
+            else
+            {
+                _roomOccupancies = cachedRoomOccupancies;
+            }
+        }
+
+        private async Task GetbGridIslands()
+        {
+            if (!_cache.TryGetValue("bGridLocations", out List<bGridIsland> cachedIslands))
+            {
+                _bGridIslands = await BuildingActionHelper.ExecuteGetAction<List<bGridIsland>>("api/islands", _roomsConfig);
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set("bGridLocations", _bGridIslands, cacheEntryOptionsShort);
+            }
+            else
+            {
+                _bGridIslands = cachedIslands;
+            }
         }
 
         private List<Room> GetRooms(string type)

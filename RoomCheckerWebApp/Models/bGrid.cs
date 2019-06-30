@@ -44,7 +44,7 @@ namespace RoomChecker.Models
     }
 
 
-    public class bGridLocations
+    public class bGridLocation
     {
         public int id { get; set; }
         public string name { get; set; }
@@ -55,5 +55,14 @@ namespace RoomChecker.Models
         public float y { get; set; }
         public float z { get; set; }
         public int? island_id { get; set; }
+    }
+
+    public class bGridIsland
+    {
+        public int id { get; set; }
+        public int light_intensity { get; set; }
+        public string light_status { get; set; }
+        public int type { get; set; }
+        public List<int> locations { get; set; }
     }
 }
