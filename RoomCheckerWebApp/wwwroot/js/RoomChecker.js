@@ -141,16 +141,16 @@ function GetRoomStatusOnDate(id, showbGrid) {
                 }
             }
 
-            var lightButtonOn = document.getElementById('lightOn_' + data.name);
-            var lightButtonOff = document.getElementById('lightOff_' + data.name);
-            if (data.island.light_status === 'on') {
-                lightButtonOn.className = 'btn btn-primary';
-                lightButtonOff.className = 'btn btn-default';
-            }
-            else {
-                lightButtonOn.className = 'btn btn-default';
-                lightButtonOff.className = 'btn btn-primary';
-            }
+            //var lightButtonOn = document.getElementById('lightOn_' + data.name);
+            //var lightButtonOff = document.getElementById('lightOff_' + data.name);
+            //if (data.island.light_status === 'on') {
+            //    lightButtonOn.className = 'btn btn-primary';
+            //    lightButtonOff.className = 'btn btn-default';
+            //}
+            //else {
+            //    lightButtonOn.className = 'btn btn-default';
+            //    lightButtonOff.className = 'btn btn-primary';
+            //}
         });
 }
 
