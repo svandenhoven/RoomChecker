@@ -129,11 +129,11 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                     room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
 
                     //Get Associated Island
-                    var islands = _bGridIslands.Where(i => i.locations.Any(l => room.Nodes.Any(n => Convert.ToInt32(n.Id).Equals(l))));
-                    if(islands != null)
-                    {
-                        room.Island = islands.First();
-                    }
+                    //var islands = _bGridIslands.Where(i => i.locations.Any(l => room.Nodes.Any(n => Convert.ToInt32(n.Id).Equals(l))));
+                    //if(islands != null)
+                    //{
+                    //    room.Island = islands.First();
+                    //}
                 }
 
                 var roomNodesTemp = _roomTemperatures.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
