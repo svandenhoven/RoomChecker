@@ -29,7 +29,7 @@ function SetStatus() {
     $('#timeTitle').text('Meeting Rooms available at ' + n(new Date().getHours()) + ":" + n(new Date().getMinutes()));
 
     rooms.forEach(function (room) {
-        //GetRoomStatus(room);
+        GetRoomStatus(room);
     });
 
 }

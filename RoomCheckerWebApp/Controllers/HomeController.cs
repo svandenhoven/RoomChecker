@@ -91,7 +91,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
             await GetbGridOccupancies();
             await GetbGridTemperatures();
-            await GetbGridIslands();
+ //           await GetbGridIslands();
 
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
@@ -161,7 +161,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             {
                 await GetbGridOccupancies();
                 await GetbGridTemperatures();
-                await GetbGridIslands();
+                //await GetbGridIslands();
 
                 var rooms = GetRooms("meet");
                 ViewBag.Message = "";
@@ -214,7 +214,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             {
                 await GetbGridOccupancies();
                 await GetbGridTemperatures();
-                await GetbGridIslands();
+                //await GetbGridIslands();
 
                 var rooms = GetRooms("work");
                 ViewBag.Message = "";
@@ -309,7 +309,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
                 rooms = rooms.Where(r => r.RoomType == roomType).OrderBy(r => r.Name).ToList<Room>();
                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("roomslist", rooms, cacheEntryOptions);
+                _cache.Set(roomType + "roomslist", rooms, cacheEntryOptions);
                 return rooms;
             }
             else
