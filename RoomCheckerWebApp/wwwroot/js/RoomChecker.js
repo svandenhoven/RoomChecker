@@ -83,7 +83,7 @@ function GetRoomStatusOnDate(id, showbGrid) {
                             $('#planning_' + id).text('rest of day');
                         }
                     }
-                    itemCell.style.backgroundColor = "lightgreen";
+                    itemCell.className = "gallery green";
                 }
                 else {
                     $('#status_' + id).text('Reserved');
@@ -91,13 +91,13 @@ function GetRoomStatusOnDate(id, showbGrid) {
                         $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
                     else
                         $('#planning_' + id).text('rest of day');
-                    itemCell.style.backgroundColor = "pink";
+                    itemCell.className = "gallery pink";
                 }
             }
             else {
                 $('#status_' + id).text('Free seating');
                 $('#planning_' + id).text('');
-                itemCell.style.backgroundColor = "lightblue";
+                itemCell.className = "gallery blue";
             }
 
             var label = document.getElementById('occupied_' + data.name);

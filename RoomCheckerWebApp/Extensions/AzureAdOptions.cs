@@ -21,5 +21,8 @@
         public string GraphResourceId { get; set; }
 
         public string GraphScopes { get; set; }
+
+        public string TokenCacheConnectionString { get; set; }
+        public string TokenCacheTableName { get; set; }
     }
 }

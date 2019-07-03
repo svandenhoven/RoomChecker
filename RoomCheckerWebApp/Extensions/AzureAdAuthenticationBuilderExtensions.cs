@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using MicrosoftGraphAspNetCoreConnectSample.Helpers;
 using Microsoft.Identity.Client;
+using RoomChecker.Helpers;
 
 namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
 {
@@ -86,7 +87,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
                             _azureOptions.ClientId, 
                             _azureOptions.BaseUrl + _azureOptions.CallbackPath,
                             new ClientCredential(_azureOptions.ClientSecret),
-                            new SessionTokenCache(identifier, memoryCache).GetCacheInstance(), 
+                            new AzureTableTokenCache(identifier,_azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance(), 
                             null);
                         var result = await cca.AcquireTokenByAuthorizationCodeAsync(code, graphScopes);
 

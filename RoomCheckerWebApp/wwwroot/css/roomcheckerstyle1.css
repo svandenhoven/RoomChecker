@@ -4,16 +4,33 @@
     float: left;
     width: 120px;
     border-radius: 15px;
+   
+}
+
+div.green {
+    background-color:lightgreen
+}
+
+div.pink {
+    background-color: pink
+}
+
+div.blue {
+    background-color: lightblue
 }
 
 div.gallery:hover {
     border: 1px solid #777;
 }
 
+
+
 div.gallery img {
     width: 100%;
     height: auto;
 }
+
+
 
 div.desc {
     padding: 15px;
