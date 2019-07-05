@@ -46,7 +46,7 @@ else
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title">Room @(item.Name)</h4>
+                                <h1 class="modal-title">Floor @(floor.Key), Room @(item.Name)</h1>
                             </div>
                             <div class="modal-body">
                                 <p>
@@ -54,8 +54,20 @@ else
                                     @Html.DisplayFor(modelItem => item.AudioVideo)
                                 </p>
                                 <div style="position: relative; left: 0; top: 0;">
-                                    <img src="~/images/floor3.png" width="300" height="400"/>
-                                    <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/70))px;"/>
+                                    <img src="~/images/floor@(floor.Key).png" width="300" height="400" />
+                                    @switch (floor.Key)
+                                    {
+                                        case 1:
+                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.X))*(300/60)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
+                                            break;
+                                        case 2:
+                                        case 3:
+                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
+                                            break;
+                                        case 4:
+                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/25)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/45))px;" />
+                                            break;
+                                    };
                                 </div>
                             </div>
                             <div class="modal-footer">
