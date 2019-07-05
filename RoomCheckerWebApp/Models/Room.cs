@@ -40,5 +40,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
         public int Capacity { get; set; }
         public string AudioVideo { get; set; }
         public decimal Temperature { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
     }
 }

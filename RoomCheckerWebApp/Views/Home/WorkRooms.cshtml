@@ -35,43 +35,71 @@ else
     <div id="F-@floor.Key" class="collapse in">
         @foreach (var type in Model.Where(r => r.Floor == floor.Key).GroupBy(t => t.Type))
         {
-            <fieldset class="scheduler-border">
-                <legend class="scheduler-border">@type.Key.First().ToString().ToUpper()@type.Key.Substring(1) Rooms on Floor @(floor.Key)</legend>
-                @foreach (var item in Model.Where(r => r.Floor == floor.Key && r.Type == type.Key))
-                {
-                    <div class="gallery" id="item_@(item.Name)" onclick="javascript:GetRoomStatus(@(item.Name))">
-                        <div id="occupied_@(item.Name)" class="label label-default" style="visibility:hidden">&nbsp;</div>
-                        <div class="roomName">@Html.DisplayFor(modelItem => item.Name)</div>
-                        <div class="capacity">@Html.DisplayFor(modelItem => item.Capacity)p @Html.DisplayFor(modelItem => item.AudioVideo)</div>
-                        <div class="desc">
-                            <div class="status" id="status_@(item.Name)">Checking...</div>
-                            <div class="planning" id="planning_@(item.Name)">&nbsp;</div>
-                        </div>
-                        <div id="scheduleLine">
-                            <table border="1" align="center">
-                                <tr>
-                                    @for (int i = 8; i < 19; i++)
-                                    {
-                                        <td class="unknown" id="@(item.Name)-h-@i">
-                                            &nbsp;
-                                        </td>
-                                    }
+        <fieldset class="scheduler-border">
+            <legend class="scheduler-border">@type.Key.First().ToString().ToUpper()@type.Key.Substring(1) Rooms on Floor @(floor.Key)</legend>
+            @foreach (var item in Model.Where(r => r.Floor == floor.Key && r.Type == type.Key))
+            {
+                <!-- Modal -->
+                <div id="Modal_@(item.Name)" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
 
-                                </tr>
-                                <tr>
-                                    @for (int i = 8; i < 19; i++)
-                                    {
-                                        <td style="font-size:6px; text-align:center">
-                                            @i
-                                        </td>
-                                    }
-                                </tr>
-                            </table>
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Room @(item.Name)</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p>
+                                    @Html.DisplayFor(modelItem => item.Capacity) Person(s) room
+                                    @Html.DisplayFor(modelItem => item.AudioVideo)
+                                </p>
+                                <div style="position: relative; left: 0; top: 0;">
+                                    <img src="~/images/floor@(floor).png" width="300" height="400" />
+                                    <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
                         </div>
-                        <span id="label_@(item.Name)" class="label label-default">@(item.Type) </span>
+
                     </div>
-                }
-            </fieldset>
+                </div>
+
+                <div class="gallery" id="item_@(item.Name)" onclick="javascript:$('#Modal_@(item.Name)').modal('show'); ">
+                    <div id="occupied_@(item.Name)" class="label label-default" style="visibility:hidden">&nbsp;</div>
+                    <div class="roomName">@Html.DisplayFor(modelItem => item.Name)</div>
+                    <div class="capacity">@Html.DisplayFor(modelItem => item.Capacity)p @Html.DisplayFor(modelItem => item.AudioVideo)</div>
+                    <div class="desc">
+                        <div class="status" id="status_@(item.Name)">Checking...</div>
+                        <div class="planning" id="planning_@(item.Name)">&nbsp;</div>
+                    </div>
+                    <div id="scheduleLine">
+                        <table border="1" align="center">
+                            <tr>
+                                @for (int i = 8; i < 19; i++)
+                                {
+                                    <td class="unknown" id="@(item.Name)-h-@i">
+                                        &nbsp;
+                                    </td>
+                                }
+
+                            </tr>
+                            <tr>
+                                @for (int i = 8; i < 19; i++)
+                                {
+                                    <td style="font-size:6px; text-align:center">
+                                        @i
+                                    </td>
+                                }
+                            </tr>
+                        </table>
+                    </div>
+                    <span id="label_@(item.Name)" class="label label-default">@(item.Type) </span>
+                </div>
+            }
+        </fieldset>
 
         }
     </div>
