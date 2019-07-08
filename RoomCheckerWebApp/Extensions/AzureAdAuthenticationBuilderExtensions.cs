@@ -92,6 +92,17 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
                             null);
                         var result = await cca.AcquireTokenByAuthorizationCodeAsync(code, graphScopes);
 
+                        string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
+                        var cca2 = new ConfidentialClientApplication(
+                            _azureOptions.ClientId,
+                            _azureOptions.BaseUrl + _azureOptions.CallbackPath,
+                            new ClientCredential(_azureOptions.ClientSecret),
+                            new SessionTokenCache(identifier, memoryCache).GetCacheInstance(),
+                            //new AzureTableTokenCache(identifier,_azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance(), 
+                            null);
+                        var resultPBI = await cca.AcquireTokenByAuthorizationCodeAsync(code, pBIScopes);
+
+
                         // Check whether the login is from the MSA tenant. 
                         // The sample uses this attribute to disable UI buttons for unsupported operations when the user is logged in with an MSA account.
                         var currentTenantId = context.Principal.FindFirst(Startup.TenantIdType).Value;

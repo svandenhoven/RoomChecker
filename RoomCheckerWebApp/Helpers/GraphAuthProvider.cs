@@ -40,8 +40,9 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
         // Gets an access token. First tries to get the access token from the token cache.
         // Using password (secret) to authenticate. Production apps should use a certificate.
-        public async Task<string> GetUserAccessTokenAsync(string userId)
+        public async Task<string> GetUserAccessTokenAsync(string userId, string[] scopes)
         {
+            //scopes = _scopes;
             _userTokenCache = new SessionTokenCache(userId, _memoryCache).GetCacheInstance();
 
             var cca = new ConfidentialClientApplication(
@@ -60,7 +61,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
             try
             {
-                var result = await cca.AcquireTokenSilentAsync(_scopes, accounts.First());
+                var result = await cca.AcquireTokenSilentAsync(scopes, accounts.First());
                 return result.AccessToken;
             }
 
@@ -78,6 +79,6 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
     public interface IGraphAuthProvider
     {
-        Task<string> GetUserAccessTokenAsync(string userId);
+        Task<string> GetUserAccessTokenAsync(string userId, string[] scopes);
     }
 }

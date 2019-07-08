@@ -19,26 +19,33 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
         }
 
         // Get an authenticated Microsoft Graph Service client.
-        public GraphServiceClient GetAuthenticatedClient(string userId)
+        public GraphServiceClient GetAuthenticatedClient(string userId, string[] scopes)
         {
             _graphClient = new GraphServiceClient(new DelegateAuthenticationProvider(
                 async requestMessage =>
                 {
                     // Passing tenant ID to the sample auth provider to use as a cache key
-                    var accessToken = await _authProvider.GetUserAccessTokenAsync(userId);
+                    var accessToken = await _authProvider.GetUserAccessTokenAsync(userId, scopes);
 
                     // Append the access token to the request
                     requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                     
-                    // This header identifies the sample in the Microsoft Graph service. If extracting this code for your project please remove.
-                    requestMessage.Headers.Add("SampleID", "aspnetcore-connect-sample");
                 }));
 
             return _graphClient;
         }
+
+        public string GetPBIAccessToken(string userId, string[] scopes)
+        {
+            var accessToken = _authProvider.GetUserAccessTokenAsync(userId, scopes).Result;
+            return accessToken;
+
+        }
+
     }
     public interface IGraphSdkHelper
     {
-        GraphServiceClient GetAuthenticatedClient(string userId);
+        GraphServiceClient GetAuthenticatedClient(string userId, string[] scopes);
+        string GetPBIAccessToken(string userId, string[] scopes);
     }
 }

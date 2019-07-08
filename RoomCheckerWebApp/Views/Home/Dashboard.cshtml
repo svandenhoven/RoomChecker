@@ -1,9 +1,78 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "Dashboard";
 }
 
+<script src="https://npmcdn.com/es6-promise@3.2.1"></script>
+<script src="~/scripts/powerbi.js"></script>
+
+<script type="text/javascript">
+
+    //This code is for sample purposes only.
+
+    //Configure IFrame for the Report after you have an Access Token. See Default.aspx.cs to learn how to get an Access Token
+    window.onload = function () {
+        var accessToken = '@(ViewBag.AccessToken)';
+
+        if (!accessToken || accessToken == "") {
+            return;
+        }
+
+        var embedUrl = '@(ViewBag.EmbedUrl)';
+        var reportId = '@(ViewBag.ReportId)';
+
+        // Embed configuration used to describe the what and how to embed.
+        // This object is used when calling powerbi.embed.
+        // This also includes settings and options such as filters.
+        // You can find more information at https://github.com/Microsoft/PowerBI-JavaScript/wiki/Embed-Configuration-Details.
+        var config = {
+            type: 'report',
+            accessToken: accessToken,
+            embedUrl: embedUrl,
+            id: reportId,
+            settings: {
+                filterPaneEnabled: false,
+                navContentPaneEnabled: true
+            }
+        };
+
+        // Grab the reference to the div HTML element that will host the report.
+        var reportContainer = document.getElementById('reportContainer');
+
+        // Embed the report and display it within the div container.
+        var report = powerbi.embed(reportContainer, config);
+
+        // Report.on will add an event handler which prints to Log window.
+        report.on("loaded", function () {
+            var logView = document.getElementById('logView');
+            logView.innerHTML = logView.innerHTML + "Loaded<br/>";
+
+            // Report.off removes a given event handler if it exists.
+            report.off("loaded");
+        });
+
+        // Report.on will add an event handler which prints to Log window.
+        report.on("rendered", function () {
+            var logView = document.getElementById('logView');
+            logView.innerHTML = logView.innerHTML + "Rendered<br/>";
+
+            // Report.off removes a given event handler if it exists.
+            report.off("rendered");
+        });
+    };
+</script>
+
 <h2>Occupancy Dashboard</h2>
 
-<iframe width="1140" height="800" src="https://msit.powerbi.com/reportEmbed?reportId=a2df36e5-469c-4a41-8920-679c70cd242a&autoAuth=true&ctid=72f988bf-86f1-41af-91ab-2d7cd011db47" frameborder="0" allowFullScreen="true"></iframe>
+<div>
+    Embedded Report
+    <br />
+    <div ID="reportContainer" style="width: 900px; height: 600px"></div>
+</div>
+
+<div>
+    Log View
+    <br />
+    <div ID="logView" style="width: 880px;"></div>
+</div>
+
 

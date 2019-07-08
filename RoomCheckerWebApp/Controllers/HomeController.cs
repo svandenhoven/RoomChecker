@@ -25,6 +25,8 @@ using System.Net;
 using RoomChecker.Helpers;
 using Microsoft.Identity.Client;
 using MicrosoftGraphAspNetCoreConnectSample.Extensions;
+using Microsoft.PowerBI.Api.V2;
+using Microsoft.Rest;
 //using RoomChecker.Models;
 
 namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
@@ -61,13 +63,41 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Dashboard()
+        [Authorize]
+        public IActionResult Dashboard()
         {
             //var azureOptions = new AzureAdOptions();
             //_configuration.Bind("AzureAd", azureOptions);
 
             //var embedService = new EmbedService(azureOptions);
             //var result = await embedService.EmbedReport("", "");
+
+            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
+            string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
+            var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
+
+            var WorkspaceId = "886c5d84-639a-4ec0-8329-391627a3eb51";
+            var reportId = "9d2892c5-95c6-43d0-9fd6-02e87a132ed0";
+            var powerBiApiUrl = "https://api.powerbi.com/";
+
+            using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
+            {
+                Microsoft.PowerBI.Api.V2.Models.Report report = null;
+
+                if (!string.IsNullOrEmpty(WorkspaceId))
+                {
+                    report = client.Reports.GetReportInGroup(WorkspaceId, reportId);
+                }
+
+                if (report != null)
+                {
+                    ViewBag.EmbedUrl = report.EmbedUrl;
+                    ViewBag.ReportId = report.Id;
+                    ViewBag.ReportName = report.Name;
+                    ViewBag.AccessToken = pbiAccessToken;
+                }
+            }
+
             return View();
         }
 
@@ -115,38 +145,6 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return Json(room);
         }
 
-        private async Task<Room> GetRoomData(Room room, DateTime dt)
-        {
-            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-            var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
-            room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
-            if (room.Nodes != null)
-            {
-                var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
-                if (roomNodes != null)
-                {
-                    var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
-                    room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
-
-                    //Get Associated Island
-                    //var islands = _bGridIslands.Where(i => i.locations.Any(l => room.Nodes.Any(n => Convert.ToInt32(n.Id).Equals(l))));
-                    //if(islands != null)
-                    //{
-                    //    room.Island = islands.First();
-                    //}
-                }
-
-                var roomNodesTemp = _roomTemperatures.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
-                if (roomNodesTemp != null)
-                {
-                    var roomNodesTempLatest = roomNodesTemp.GroupBy(r => r.location_id).Select(ro => ro.OrderByDescending(x => x.timestamp).FirstOrDefault());
-                    var avgTemp = roomNodesTemp.Average(r => Convert.ToDecimal(r.value));
-                    room.Temperature = avgTemp;
-                }
-            }
-
-            return room;
-        }
 
         [Authorize]
         public IActionResult Bot()
@@ -246,6 +244,44 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             {
                 _roomTemperatures = cachedRoomTemperatures;
             }
+        }
+
+
+        private async Task<Room> GetRoomData(Room room, DateTime dt)
+        {
+            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
+
+            var azureOptions = new AzureAdOptions();
+            _configuration.Bind("AzureAd", azureOptions);
+
+            var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
+            room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
+            if (room.Nodes != null)
+            {
+                var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                if (roomNodes != null)
+                {
+                    var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
+                    room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
+
+                    //Get Associated Island
+                    //var islands = _bGridIslands.Where(i => i.locations.Any(l => room.Nodes.Any(n => Convert.ToInt32(n.Id).Equals(l))));
+                    //if(islands != null)
+                    //{
+                    //    room.Island = islands.First();
+                    //}
+                }
+
+                var roomNodesTemp = _roomTemperatures.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                if (roomNodesTemp != null)
+                {
+                    var roomNodesTempLatest = roomNodesTemp.GroupBy(r => r.location_id).Select(ro => ro.OrderByDescending(x => x.timestamp).FirstOrDefault());
+                    var avgTemp = roomNodesTemp.Average(r => Convert.ToDecimal(r.value));
+                    room.Temperature = avgTemp;
+                }
+            }
+
+            return room;
         }
 
         private async Task GetbGridOccupancies()
