@@ -71,25 +71,38 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
         {
             try
             {
-                QueryOption startDateTime = new QueryOption("startDateTime", dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-                QueryOption endDateTime = new QueryOption("endDateTime", dateTime.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ"));
-                List<QueryOption> options = new List<QueryOption>
+                //QueryOption startDateTime = new QueryOption("startDateTime", dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+                //QueryOption endDateTime = new QueryOption("endDateTime", dateTime.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ"));
+                //List<QueryOption> options = new List<QueryOption>
+                //{
+                //    startDateTime,
+                //    endDateTime
+                //};
+
+                //var roomSchedules = await graphClient.Users[room.Id].CalendarView.Request(options).GetAsync();
+
+
+                var beginTime = new DateTimeTimeZone
                 {
-                    startDateTime,
-                    endDateTime
+                    DateTime = dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ")
                 };
 
-                var roomSchedules = await graphClient.Users[room.Id].CalendarView.Request(options).GetAsync();
+                var endTime = new DateTimeTimeZone
+                {
+                    DateTime = dateTime.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                };
 
-                if (roomSchedules.Count == 0)
+                var roomFreeBusy = await graphClient.Users[room.Id].Calendar.GetSchedule(new List<string> { room.Id }, endTime, beginTime).Request().PostAsync();
+
+                if (roomFreeBusy.First().ScheduleItems.Count() == 0)
                 {
                     roomRecent.Available = true;
                 }
                 else
                 {
-                    var orderedRoomSchedules = roomSchedules.Where(r => r.ShowAs != FreeBusyStatus.Free).OrderBy(r => r.Start.DateTime).ToList();
+                    var orderedRoomSchedules = roomFreeBusy.First().ScheduleItems.Where(r => r.Status != FreeBusyStatus.Free).OrderBy(r => r.Start.DateTime).ToList();
 
-                    var cetTime = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");                    //Get events now or coming
+                    var cetTime = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
                     var scheduleArray = orderedRoomSchedules.ToArray();
 
                     var roomBusy = false;
@@ -123,17 +136,6 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                                 //if the end data of current meeting is after the enddate of a previous meeting
                                 roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime);
                             }
-
-                            //if(s < scheduleArray.Length-1)
-                            //{
-                            //    if (DateTime.Parse(scheduleArray[s + 1].Start.DateTime) >= DateTime.Parse(scheduleArray[s].End.DateTime))
-                            //    {
-                            //        //if there is next meeting starts after the this meeting record the time it is free
-                            //        roomRecent.FreeUntil = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].Start.DateTime), cetTime);
-                            //        roomRecent.FreeAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s + 1].End.DateTime), cetTime);
-                            //    }
-                            //}
-
                         }
                         if (DateTime.Parse(scheduleArray[s].Start.DateTime) <= dateTime.ToUniversalTime()
                             && DateTime.Parse(scheduleArray[s].End.DateTime) < dateTime.ToUniversalTime())

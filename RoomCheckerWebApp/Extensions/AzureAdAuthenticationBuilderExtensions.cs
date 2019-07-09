@@ -72,8 +72,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
                     },
                     OnAuthenticationFailed = context =>
                     {
-                        context.Response.Redirect("/Home/Error");
-                        context.HandleResponse(); // Suppress the exception
+                        //context.Response.Redirect("/Home/Error");
+                        //context.HandleResponse(); // Suppress the exception
                         return Task.CompletedTask;
                     },
                     OnAuthorizationCodeReceived = async (context) =>
@@ -82,9 +82,9 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
                         var identifier = context.Principal.FindFirst(Startup.ObjectIdentifierType).Value;
                         var memoryCache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
                         var graphScopes = _azureOptions.GraphScopes.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        
+
                         var cca = new ConfidentialClientApplication(
-                            _azureOptions.ClientId, 
+                            _azureOptions.ClientId,
                             _azureOptions.BaseUrl + _azureOptions.CallbackPath,
                             new ClientCredential(_azureOptions.ClientSecret),
                             new SessionTokenCache(identifier, memoryCache).GetCacheInstance(),
@@ -92,15 +92,15 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
                             null);
                         var result = await cca.AcquireTokenByAuthorizationCodeAsync(code, graphScopes);
 
-                        string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
-                        var cca2 = new ConfidentialClientApplication(
-                            _azureOptions.ClientId,
-                            _azureOptions.BaseUrl + _azureOptions.CallbackPath,
-                            new ClientCredential(_azureOptions.ClientSecret),
-                            new SessionTokenCache(identifier, memoryCache).GetCacheInstance(),
-                            //new AzureTableTokenCache(identifier,_azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance(), 
-                            null);
-                        var resultPBI = await cca.AcquireTokenByAuthorizationCodeAsync(code, pBIScopes);
+                        //string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
+                        //var cca2 = new ConfidentialClientApplication(
+                        //    _azureOptions.ClientId,
+                        //    _azureOptions.BaseUrl + _azureOptions.CallbackPath,
+                        //    new ClientCredential(_azureOptions.ClientSecret),
+                        //    new SessionTokenCache(identifier, memoryCache).GetCacheInstance(),
+                        //    //new AzureTableTokenCache(identifier,_azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance(), 
+                        //    null);
+                        //var resultPBI = await cca.AcquireTokenByAuthorizationCodeAsync(code, pBIScopes);
 
 
                         // Check whether the login is from the MSA tenant. 
@@ -110,7 +110,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
                         {
                             // MSA (Microsoft Account) is used to log in
                         }
-                        
+
                         context.HandleCodeRedemption(result.AccessToken, result.IdToken);
                     },
                     // If your application needs to do authenticate single users, add your user validation below.

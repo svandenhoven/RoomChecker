@@ -106,7 +106,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
-         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
+        [Authorize]
+        public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
          {
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;

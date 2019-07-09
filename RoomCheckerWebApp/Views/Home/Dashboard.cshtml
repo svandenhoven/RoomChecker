@@ -40,39 +40,14 @@
 
         // Embed the report and display it within the div container.
         var report = powerbi.embed(reportContainer, config);
-
-        // Report.on will add an event handler which prints to Log window.
-        report.on("loaded", function () {
-            var logView = document.getElementById('logView');
-            logView.innerHTML = logView.innerHTML + "Loaded<br/>";
-
-            // Report.off removes a given event handler if it exists.
-            report.off("loaded");
-        });
-
-        // Report.on will add an event handler which prints to Log window.
-        report.on("rendered", function () {
-            var logView = document.getElementById('logView');
-            logView.innerHTML = logView.innerHTML + "Rendered<br/>";
-
-            // Report.off removes a given event handler if it exists.
-            report.off("rendered");
-        });
     };
 </script>
 
 <h2>Occupancy Dashboard</h2>
 
-<div>
-    Embedded Report
-    <br />
-    <div ID="reportContainer" style="width: 900px; height: 600px"></div>
+<div style="padding-bottom:60.25%; position:relative; display:block; width: 100%">
+    <div ID="reportContainer" style="position:absolute; top:0; left: 0; width:100%; height:100%"></div>
 </div>
 
-<div>
-    Log View
-    <br />
-    <div ID="logView" style="width: 880px;"></div>
-</div>
 
 
