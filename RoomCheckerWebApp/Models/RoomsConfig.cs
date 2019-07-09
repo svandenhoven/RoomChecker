@@ -22,5 +22,7 @@ namespace RoomChecker.Models
         public string bGridUser { get; set; }
         public string bGridPW { get; set; }
         public string bGridEndPoint { get; set; }
+        public string WorkspaceId { get; set; }
+        public string ReportId { get; set; }
     }
 }

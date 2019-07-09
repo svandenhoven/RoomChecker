@@ -47,7 +47,7 @@ else
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h1 class="modal-title">Floor @(floor.Key), Room @(item.Name)</h1>
+                                <h3 class="modal-title">Floor @(floor.Key), Room @(item.Name)</h3>
                             </div>
                             <div class="modal-body">
                                 <p>
@@ -66,7 +66,7 @@ else
                                             <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
                                             break;
                                         case 4:
-                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/25)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/45))px;" />
+                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/25)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/38))px;" />
                                             break;
                                     };
 

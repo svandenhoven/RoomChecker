@@ -66,27 +66,24 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         [Authorize]
         public IActionResult Dashboard()
         {
-            //var azureOptions = new AzureAdOptions();
-            //_configuration.Bind("AzureAd", azureOptions);
-
-            //var embedService = new EmbedService(azureOptions);
-            //var result = await embedService.EmbedReport("", "");
+            var roomsConfig = new RoomsConfig();
+            _configuration.Bind("RoomsConfig", roomsConfig);
 
             var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
             string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
             var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
 
-            var WorkspaceId = "886c5d84-639a-4ec0-8329-391627a3eb51";
-            var reportId = "9d2892c5-95c6-43d0-9fd6-02e87a132ed0";
+            var workspaceId = roomsConfig.WorkspaceId;
+            var reportId = roomsConfig.ReportId;
             var powerBiApiUrl = "https://api.powerbi.com/";
 
             using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
             {
                 Microsoft.PowerBI.Api.V2.Models.Report report = null;
 
-                if (!string.IsNullOrEmpty(WorkspaceId))
+                if (!string.IsNullOrEmpty(workspaceId))
                 {
-                    report = client.Reports.GetReportInGroup(WorkspaceId, reportId);
+                    report = client.Reports.GetReportInGroup(workspaceId, reportId);
                 }
 
                 if (report != null)
