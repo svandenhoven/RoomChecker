@@ -58,14 +58,14 @@ else
                                     @switch (floor.Key)
                                     {
                                         case 1:
-                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.X))*(300/60)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
+                                            <img id="@(item.Name)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.X))*(300/60)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
                                             break;
                                         case 2:
                                         case 3:
-                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
+                                            <img id="@(item.Name)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
                                             break;
                                         case 4:
-                                            <img src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/25)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/45))px;" />
+                                            <img id="@(item.Name)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/25)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/45))px;" />
                                             break;
                                     };
                                 </div>

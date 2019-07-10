@@ -87,8 +87,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
                             _azureOptions.ClientId,
                             _azureOptions.BaseUrl + _azureOptions.CallbackPath,
                             new ClientCredential(_azureOptions.ClientSecret),
-                            new SessionTokenCache(identifier, memoryCache).GetCacheInstance(),
-                            //new AzureTableTokenCache(identifier,_azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance(), 
+                            //new SessionTokenCache(identifier, memoryCache).GetCacheInstance(),
+                            new AzureTableTokenCache(identifier,_azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance(), 
                             null);
                         var result = await cca.AcquireTokenByAuthorizationCodeAsync(code, graphScopes);
 

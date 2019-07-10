@@ -37,6 +37,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
         public string GetPBIAccessToken(string userId, string[] scopes)
         {
+            
             var accessToken = _authProvider.GetUserAccessTokenAsync(userId, scopes).Result;
             return accessToken;
 

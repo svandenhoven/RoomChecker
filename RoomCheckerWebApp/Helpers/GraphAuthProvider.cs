@@ -11,6 +11,7 @@ using Microsoft.Identity.Client;
 using Microsoft.Graph;
 using System.Linq;
 using MicrosoftGraphAspNetCoreConnectSample.Extensions;
+using RoomChecker.Helpers;
 
 namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 {
@@ -18,7 +19,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
     {
         private readonly IMemoryCache _memoryCache;
         private TokenCache _userTokenCache;
-
+        private AzureAdOptions _azureOptions;
         // Properties used to get and manage an access token.
         private readonly string _appId;
         private readonly ClientCredential _credential;
@@ -27,13 +28,13 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
 
         public GraphAuthProvider(IMemoryCache memoryCache, IConfiguration configuration)
         {
-            var azureOptions = new AzureAdOptions();
-            configuration.Bind("AzureAd", azureOptions);
+            _azureOptions = new AzureAdOptions();
+            configuration.Bind("AzureAd", _azureOptions);
 
-            _appId = azureOptions.ClientId;
-            _credential = new ClientCredential(azureOptions.ClientSecret);
-            _scopes = azureOptions.GraphScopes.Split(new[] { ' ' });
-            _redirectUri = azureOptions.BaseUrl + azureOptions.CallbackPath;
+            _appId = _azureOptions.ClientId;
+            _credential = new ClientCredential(_azureOptions.ClientSecret);
+            _scopes = _azureOptions.GraphScopes.Split(new[] { ' ' });
+            _redirectUri = _azureOptions.BaseUrl + _azureOptions.CallbackPath;
 
             _memoryCache = memoryCache;
         }
@@ -43,7 +44,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
         public async Task<string> GetUserAccessTokenAsync(string userId, string[] scopes)
         {
             //scopes = _scopes;
-            _userTokenCache = new SessionTokenCache(userId, _memoryCache).GetCacheInstance();
+            //_userTokenCache = new SessionTokenCache(userId, _memoryCache).GetCacheInstance();
+            _userTokenCache = new AzureTableTokenCache(userId, _azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance();
 
             var cca = new ConfidentialClientApplication(
                 _appId,

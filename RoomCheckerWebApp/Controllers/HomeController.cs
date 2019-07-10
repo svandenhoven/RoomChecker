@@ -72,29 +72,30 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
             string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
             var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
+            //if (pbiAccessToken != null)
+            //{
+                var workspaceId = roomsConfig.WorkspaceId;
+                var reportId = roomsConfig.ReportId;
+                var powerBiApiUrl = "https://api.powerbi.com/";
 
-            var workspaceId = roomsConfig.WorkspaceId;
-            var reportId = roomsConfig.ReportId;
-            var powerBiApiUrl = "https://api.powerbi.com/";
-
-            using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
-            {
-                Microsoft.PowerBI.Api.V2.Models.Report report = null;
-
-                if (!string.IsNullOrEmpty(workspaceId))
+                using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
                 {
-                    report = client.Reports.GetReportInGroup(workspaceId, reportId);
-                }
+                    Microsoft.PowerBI.Api.V2.Models.Report report = null;
 
-                if (report != null)
-                {
-                    ViewBag.EmbedUrl = report.EmbedUrl;
-                    ViewBag.ReportId = report.Id;
-                    ViewBag.ReportName = report.Name;
-                    ViewBag.AccessToken = pbiAccessToken;
-                }
+                    if (!string.IsNullOrEmpty(workspaceId))
+                    {
+                        report = client.Reports.GetReportInGroup(workspaceId, reportId);
+                    }
+
+                    if (report != null)
+                    {
+                        ViewBag.EmbedUrl = report.EmbedUrl;
+                        ViewBag.ReportId = report.Id;
+                        ViewBag.ReportName = report.Name;
+                        ViewBag.AccessToken = pbiAccessToken;
+                    }
+                //}
             }
-
             return View();
         }
 
