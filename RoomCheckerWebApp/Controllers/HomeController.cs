@@ -343,15 +343,18 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 }
 
                 var bGridlocations = BuildingActionHelper.ExecuteGetAction<List<bGridLocation>>("api/locations", _roomsConfig).Result;
-                foreach(var room in rooms)
+                if (bGridlocations != null)
                 {
-                    if (room.Nodes.Count > 0)
+                    foreach (var room in rooms)
                     {
-                        var bGridLocation = room.Nodes.First().Id;
-                        room.X = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().x);
-                        room.Y = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().y);
-                    }
+                        if (room.Nodes.Count > 0)
+                        {
+                            var bGridLocation = room.Nodes.First().Id;
+                            room.X = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().x);
+                            room.Y = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().y);
+                        }
 
+                    }
                 }
                 rooms = rooms.Where(r => r.RoomType == roomType).OrderBy(r => r.Name).ToList<Room>();
                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
