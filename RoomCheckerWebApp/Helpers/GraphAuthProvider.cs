@@ -44,8 +44,8 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
         public async Task<string> GetUserAccessTokenAsync(string userId, string[] scopes)
         {
             //scopes = _scopes;
-            //_userTokenCache = new SessionTokenCache(userId, _memoryCache).GetCacheInstance();
-            _userTokenCache = new AzureTableTokenCache(userId, _azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance();
+            _userTokenCache = new SessionTokenCache(userId, _memoryCache).GetCacheInstance();
+            //_userTokenCache = new AzureTableTokenCache(userId, _azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance();
 
             var cca = new ConfidentialClientApplication(
                 _appId,
