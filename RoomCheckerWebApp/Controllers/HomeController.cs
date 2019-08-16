@@ -235,7 +235,18 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
             foreach(var asset in assetsList)
             {
-                asset.assetType = "surfacehub2.jpg";
+                switch(asset.id)
+                {
+                    case 5448:
+                        asset.assetType = "surfacehub.png";
+                        break;
+                    case 5472:
+                        asset.assetType = "surfacehub2.jpg";
+                        break;
+                    default:
+                        asset.assetType = "unknowntype.jpg";
+                        break;
+                }
                 assets.Add(asset);
             }
             return View(assets);
