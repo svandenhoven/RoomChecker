@@ -39,6 +39,16 @@ namespace RoomChecker.Models
         public double x { get; set; }
         public double y { get; set; }
         public int lastSeen { get; set; }
+        public DateTime lastSeenDT
+        {
+            get
+            {
+                // LastSeen = Unix timestamp is seconds past epoch
+                System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                dtDateTime = dtDateTime.AddSeconds(this.lastSeen).ToLocalTime();
+                return dtDateTime;
+            }
+        }
         public int floor { get; set; }
         public string building { get; set; }
     }

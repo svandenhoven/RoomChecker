@@ -105,26 +105,27 @@ function GetRoomStatusOnDate(id, showbGrid) {
 
                 switch (data.occupied) {
                     case 0:
-                        label.innerText = 'Free ' + data.temperature.toFixed(1) + "°C";
+                        label.innerText = 'Free ';
                         label.className = 'label label-success';
                         label.style.visibility = "visible";
                         break;
                     case 1:
-                        label.innerText = 'Occupied ' + data.temperature.toFixed(1) + "°C";
+                        label.innerText = 'Occupied ';
                         label.className = 'label label-warning';
                         label.style.visibility = "visible";
                         break;
                     case 2:
-                        label.innerText = 'Occupied ' + data.temperature.toFixed(1) + "°C";
+                        label.innerText = 'Occupied ';
                         label.className = 'label label-danger';
                         label.style.visibility = "visible";
                         break;
                     default:
-                        label.innerText = data.temperature.toFixed(1) + "°C";
                         label.className = 'label label-default';
                         label.style.visibility = "hidden";
                         break;
                 }
+                if (data.temperature > 0)
+                    label.innerText += ' ' + data.temperature.toFixed(1) + "°C";
             }
             else {
                 label.className = 'label label-default';
@@ -140,17 +141,6 @@ function GetRoomStatusOnDate(id, showbGrid) {
                     cell.className = 'free';
                 }
             }
-
-            //var lightButtonOn = document.getElementById('lightOn_' + data.name);
-            //var lightButtonOff = document.getElementById('lightOff_' + data.name);
-            //if (data.island.light_status === 'on') {
-            //    lightButtonOn.className = 'btn btn-primary';
-            //    lightButtonOff.className = 'btn btn-default';
-            //}
-            //else {
-            //    lightButtonOn.className = 'btn btn-default';
-            //    lightButtonOff.className = 'btn btn-primary';
-            //}
         });
 }
 

@@ -41,6 +41,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         private List<bGridOccpancy> _roomOccupancies = new List<bGridOccpancy>();
         private List<bGridTemperature> _roomTemperatures = new List<bGridTemperature>();
         private List<bGridIsland> _bGridIslands = new List<bGridIsland>();
+        private List<bGridAsset> _bGridAssets = new List<bGridAsset>();
 
         public HomeController(IConfiguration configuration, IHostingEnvironment hostingEnvironment, IGraphSdkHelper graphSdkHelper, IMemoryCache memoryCache, IOptions<RoomsConfig> roomsConfig)
         {
@@ -74,26 +75,26 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
             //if (pbiAccessToken != null)
             //{
-                var workspaceId = roomsConfig.WorkspaceId;
-                var reportId = roomsConfig.ReportId;
-                var powerBiApiUrl = "https://api.powerbi.com/";
+            var workspaceId = roomsConfig.WorkspaceId;
+            var reportId = roomsConfig.ReportId;
+            var powerBiApiUrl = "https://api.powerbi.com/";
 
-                using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
+            using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
+            {
+                Microsoft.PowerBI.Api.V2.Models.Report report = null;
+
+                if (!string.IsNullOrEmpty(workspaceId))
                 {
-                    Microsoft.PowerBI.Api.V2.Models.Report report = null;
+                    report = client.Reports.GetReportInGroup(workspaceId, reportId);
+                }
 
-                    if (!string.IsNullOrEmpty(workspaceId))
-                    {
-                        report = client.Reports.GetReportInGroup(workspaceId, reportId);
-                    }
-
-                    if (report != null)
-                    {
-                        ViewBag.EmbedUrl = report.EmbedUrl;
-                        ViewBag.ReportId = report.Id;
-                        ViewBag.ReportName = report.Name;
-                        ViewBag.AccessToken = pbiAccessToken;
-                    }
+                if (report != null)
+                {
+                    ViewBag.EmbedUrl = report.EmbedUrl;
+                    ViewBag.ReportId = report.Id;
+                    ViewBag.ReportName = report.Name;
+                    ViewBag.AccessToken = pbiAccessToken;
+                }
                 //}
             }
             return View();
@@ -109,7 +110,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
         [Authorize]
         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
-         {
+        {
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;
 
@@ -120,7 +121,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
             await GetbGridOccupancies();
             await GetbGridTemperatures();
- //           await GetbGridIslands();
+            //           await GetbGridIslands();
 
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
@@ -224,6 +225,16 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             }
         }
 
+        [Authorize]
+        public async Task<IActionResult> Assets()
+        {
+            await GetbGridAssets();
+            var knowAssets = new int[] { 5472, 5448, 5451, 5465, 5656 };
+            var assets = _bGridAssets.Where(a => knowAssets.Contains(a.id));
+            return View(assets);
+            
+        }
+
         [AllowAnonymous]
         public IActionResult TeamsRooms()
         {
@@ -275,8 +286,11 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 if (roomNodesTemp != null)
                 {
                     var roomNodesTempLatest = roomNodesTemp.GroupBy(r => r.location_id).Select(ro => ro.OrderByDescending(x => x.timestamp).FirstOrDefault());
-                    var avgTemp = roomNodesTemp.Average(r => Convert.ToDecimal(r.value));
-                    room.Temperature = avgTemp;
+                    if (roomNodesTemp.Count() > 0)
+                    {
+                        var avgTemp = roomNodesTemp.Average(r => Convert.ToDecimal(r.value));
+                        room.Temperature = avgTemp;
+                    }
                 }
             }
 
@@ -308,6 +322,20 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             else
             {
                 _bGridIslands = cachedIslands;
+            }
+        }
+
+        private async Task GetbGridAssets()
+        {
+            if (!_cache.TryGetValue("bGridAssets", out List<bGridAsset> cachedAssets))
+            {
+                _bGridAssets = await BuildingActionHelper.ExecuteGetAction<List<bGridAsset>>("api/assets", _roomsConfig);
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set("bGridAssets", _bGridAssets, cacheEntryOptionsShort);
+            }
+            else
+            {
+                _bGridAssets = cachedAssets;
             }
         }
 
