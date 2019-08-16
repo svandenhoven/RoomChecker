@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Assets";
     string lastSeenStr = "";
+    string assetTypeIcon = "";
 }
 
 <link rel="stylesheet" href="~/css/roomcheckerstyle1.css" />
@@ -31,25 +32,24 @@
                                 Last seen on @lastSeenStr
                             </p>
                             <div style="position: relative; left: 0; top: 0;">
-
                                 @switch (floor.Key)
                                 {
                                     case 0:
                                         <img src="~/images/floor@(floor.Key).png" width="300" height="200" />
-                                        <img id="@(item.id)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.x))*(300/60)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.x))*(300/60)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
                                         break;
                                     case 1:
                                         <img src="~/images/floor@(floor.Key).png" width="300" height="400" />
-                                        <img id="@(item.id)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.x))*(300/60)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.x))*(300/60)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
                                         break;
                                     case 2:
                                     case 3:
                                         <img src="~/images/floor@(floor.Key).png" width="300" height="400" />
-                                        <img id="@(item.id)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.x))*(300/45)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.x))*(300/45)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
                                         break;
                                     case 4:
                                         <img src="~/images/floor@(floor.Key).png" width="300" height="400" />
-                                        <img id="@(item.id)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.x))*(300/25)))px; top: @(Convert.ToInt16(item.y*-1)*(400/45))px;" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.x))*(300/25)))px; top: @(Convert.ToInt16(item.y*-1)*(400/45))px;" />
                                         break;
                                 };
                             </div>
@@ -63,6 +63,7 @@
             </div>
 
             <div class="gallery" id="item_@(item.id)" onclick="javascript:$('#Modal_@(item.id)').modal('show'); ">
+                <div><img src="~/images/@Html.DisplayFor(modelItem => item.assetType)" height="50"/></div>
                 <div class="roomName">@Html.DisplayFor(modelItem => item.id)</div>
                 <div class="capacity">@lastSeenStr</div>
             </div>

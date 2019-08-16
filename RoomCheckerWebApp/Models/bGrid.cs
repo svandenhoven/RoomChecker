@@ -39,6 +39,10 @@ namespace RoomChecker.Models
         public double x { get; set; }
         public double y { get; set; }
         public int lastSeen { get; set; }
+        public int floor { get; set; }
+        public string building { get; set; }
+
+        //Not from bGrid
         public DateTime lastSeenDT
         {
             get
@@ -49,8 +53,7 @@ namespace RoomChecker.Models
                 return dtDateTime;
             }
         }
-        public int floor { get; set; }
-        public string building { get; set; }
+        public string assetType { get; set; }
     }
 
 

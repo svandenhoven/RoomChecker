@@ -230,7 +230,14 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         {
             await GetbGridAssets();
             var knowAssets = new int[] { 5472, 5448, 5451, 5465, 5656 };
-            var assets = _bGridAssets.Where(a => knowAssets.Contains(a.id));
+            var assetsList = _bGridAssets.Where(a => knowAssets.Contains(a.id));
+            var assets = new List<bGridAsset>();
+
+            foreach(var asset in assetsList)
+            {
+                asset.assetType = "surfacehub2.jpg";
+                assets.Add(asset);
+            }
             return View(assets);
             
         }
