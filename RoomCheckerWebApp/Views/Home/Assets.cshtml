@@ -63,7 +63,7 @@
             </div>
 
             <div class="gallery" id="item_@(item.id)" onclick="javascript:$('#Modal_@(item.id)').modal('show'); ">
-                <div><img src="~/images/@Html.DisplayFor(modelItem => item.assetType)" height="50"/></div>
+                <div class="image"><img src="~/images/@Html.DisplayFor(modelItem => item.assetType)"/></div>
                 <div class="roomName">@Html.DisplayFor(modelItem => item.id)</div>
                 <div class="capacity">@lastSeenStr</div>
             </div>

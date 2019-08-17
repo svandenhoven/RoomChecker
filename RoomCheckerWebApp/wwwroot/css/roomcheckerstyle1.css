@@ -26,11 +26,14 @@ div.gallery:hover {
 
 
 div.gallery img {
-    width: 100%;
+    width: 60%;
     height: auto;
 }
 
 
+div.image {
+    text-align:center;
+}
 
 div.desc {
     padding: 15px;

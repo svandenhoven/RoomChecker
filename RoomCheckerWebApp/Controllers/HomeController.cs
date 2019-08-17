@@ -240,6 +240,9 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                     case 5448:
                         asset.assetType = "surfacehub.png";
                         break;
+                    case 5451:
+                        asset.assetType = "cleantrolley.jpg";
+                        break;
                     case 5472:
                         asset.assetType = "surfacehub2.jpg";
                         break;
