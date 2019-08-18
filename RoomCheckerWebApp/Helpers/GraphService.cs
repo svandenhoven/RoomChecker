@@ -61,7 +61,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                 roomRecent.ReservedBy = "Contact Hospitality Team";
                 for (int i = 0; i < roomRecent.DaySchedule.Length - 1; i++)
                 {
-                    roomRecent.DaySchedule[i] = -1;
+                    roomRecent.DaySchedule[i] = null;
                 }
                 return roomRecent;
             }
@@ -71,17 +71,6 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
         {
             try
             {
-                //QueryOption startDateTime = new QueryOption("startDateTime", dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-                //QueryOption endDateTime = new QueryOption("endDateTime", dateTime.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ"));
-                //List<QueryOption> options = new List<QueryOption>
-                //{
-                //    startDateTime,
-                //    endDateTime
-                //};
-
-                //var roomSchedules = await graphClient.Users[room.Id].CalendarView.Request(options).GetAsync();
-
-
                 var beginTime = new DateTimeTimeZone
                 {
                     DateTime = dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -110,18 +99,25 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                     {
                         var beginHour = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].Start.DateTime), cetTime).Hour;
                         var endHour = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime).Hour;
+                        var hourSchedule = new HourSchedule
+                        {
+                            Occupied = true,
+                            StartTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].Start.DateTime), cetTime),
+                            EndTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime)
+                        };
+
                         for (int t = beginHour; t <= endHour; t++)
                         {
                             if (t == endHour)
                             {
                                 if (TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(scheduleArray[s].End.DateTime), cetTime).Minute > 0)
                                 {
-                                    roomRecent.DaySchedule[t] = 1;
+                                    roomRecent.DaySchedule[t] = hourSchedule;
                                 }
                             }
                             else
                             {
-                                roomRecent.DaySchedule[t] = 1;
+                                roomRecent.DaySchedule[t] = hourSchedule;
                             }
                         }
 
@@ -174,7 +170,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
                 roomRecent.ReservedBy = "Contact Hospitality Team";
                 for (int i = 0; i < roomRecent.DaySchedule.Length - 1; i++)
                 {
-                    roomRecent.DaySchedule[i] = -1;
+                    roomRecent.DaySchedule[i] = null;
                 }
                 return roomRecent;
             }

@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 
 namespace MicrosoftGraphAspNetCoreConnectSample.Models
 {
+    public class HourSchedule
+    {
+        public bool Occupied { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public String Organizer { get; set; }
+    }
     public class Node
     {
         public string Id { get; set; }
@@ -15,10 +22,15 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
     {
         public Room(int hours)
         {
-            DaySchedule = new int[hours];
+            var hourSchedule = new HourSchedule
+            {
+                Occupied = false
+            };
+
+            DaySchedule = new HourSchedule[hours];
             for (int i = 0; i < hours; i++)
             {
-                DaySchedule[i] = 0;
+                DaySchedule[i] = hourSchedule;
             }
         }
 
@@ -35,7 +47,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Models
         public DateTime FreeUntil { get; set; }
         public string Features { get; set; }
         public int Occupied { get; set; }
-        public int[] DaySchedule { get; set; }
+        public HourSchedule[] DaySchedule { get; set; }
         public List<Node> Nodes { get; set; }
         public int Capacity { get; set; }
         public string AudioVideo { get; set; }

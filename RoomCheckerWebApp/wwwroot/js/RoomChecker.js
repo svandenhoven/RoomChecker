@@ -133,12 +133,25 @@ function GetRoomStatusOnDate(id, showbGrid) {
             }
 
             for (var i = 8; i < 19; i++) {
-                var cell = document.getElementById(id + '-h-' + i);
-                if (data.daySchedule[i] === 1) {
-                    cell.className = 'notfree';
-                }
-                if (data.daySchedule[i] === 0) {
-                    cell.className = 'free';
+                if (data.daySchedule[i] !== null) {
+                    var cell = document.getElementById(id + '-h-' + i);
+                    if (data.daySchedule[i].occupied) {
+                        var dateStart = new Date(data.daySchedule[i].startTime);
+                        var dateEnd = new Date(data.daySchedule[i].endTime);
+                        cell.className = 'notfree';
+                        cell.title = "Reserved from " +
+                            dateStart.getHours().toString().padStart(2, "0") +
+                            ":" +
+                            dateStart.getMinutes().toString().padStart(2, "0") +
+                            " till " +
+                            dateEnd.getHours().toString().padStart(2, "0") +
+                            ":" +
+                            dateEnd.getMinutes().toString().padStart(2, "0");
+                    }
+                    if (!data.daySchedule[i].occupied) {
+                        cell.className = 'free';
+                        cell.title = "Free from " + i + " till " + (i + 1);
+                    }
                 }
             }
         });
