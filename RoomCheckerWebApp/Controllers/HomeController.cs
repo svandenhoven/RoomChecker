@@ -229,7 +229,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         public async Task<IActionResult> Assets()
         {
             await GetbGridAssets();
-            var knowAssets = new int[] { 5472, 5448, 5451, 5465, 5656 };
+            var knowAssets = new int[] { 5448, 5451, 5465, 5656 };
             var assetsList = _bGridAssets.Where(a => knowAssets.Contains(a.id));
             var assets = new List<bGridAsset>();
 
@@ -243,7 +243,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                     case 5451:
                         asset.assetType = "cleantrolley.jpg";
                         break;
-                    case 5472:
+                    case 5465:
                         asset.assetType = "surfacehub2.jpg";
                         break;
                     default:
