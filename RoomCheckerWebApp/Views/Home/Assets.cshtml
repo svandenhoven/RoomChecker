@@ -9,12 +9,12 @@
 <link rel="stylesheet" href="~/css/roomcheckerstyle1.css" />
 
 <h2>Assets</h2>
-@foreach (var floor in Model.GroupBy(a => a.floor))
+@foreach (var floor in Model.Where(asset => asset.inBuilding == true).GroupBy(a => a.floor))
 {
 <div id="F-@floor.Key" class="collapse in">
     <fieldset class="scheduler-border">
         <legend class="scheduler-border">Assets on floor @floor.Key</legend>
-        @foreach (var item in Model.Where(r => r.floor == floor.Key))
+        @foreach (var item in Model.Where(r => r.floor == floor.Key && r.inBuilding == true))
         {
             lastSeenStr = item.lastSeenDT.ToString("dd MMM HH:mm");
             <!-- Modal -->
@@ -63,7 +63,7 @@
             </div>
 
             <div class="gallery" id="item_@(item.id)" onclick="javascript:$('#Modal_@(item.id)').modal('show'); ">
-                <div class="image"><img src="~/images/@Html.DisplayFor(modelItem => item.assetType)"/></div>
+                <div class="image"><img src="~/images/@Html.DisplayFor(modelItem => item.assetType)" /></div>
                 <div class="roomName">@Html.DisplayFor(modelItem => item.id)</div>
                 <div class="capacity">@lastSeenStr</div>
             </div>

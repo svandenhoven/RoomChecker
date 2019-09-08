@@ -8,26 +8,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MicrosoftGraphAspNetCoreConnectSample.Helpers;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Graph;
 using Microsoft.AspNetCore.Hosting;
 using MicrosoftGraphAspNetCoreConnectSample.Models;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
 using System;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Caching.Memory;
 using RoomChecker.Models;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System.Security.Claims;
 using System.Net;
 using RoomChecker.Helpers;
-using Microsoft.Identity.Client;
 using MicrosoftGraphAspNetCoreConnectSample.Extensions;
 using Microsoft.PowerBI.Api.V2;
 using Microsoft.Rest;
-//using RoomChecker.Models;
 
 namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 {

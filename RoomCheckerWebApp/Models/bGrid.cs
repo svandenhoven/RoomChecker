@@ -40,6 +40,7 @@ namespace RoomChecker.Models
         public double y { get; set; }
         public int lastSeen { get; set; }
         public int floor { get; set; }
+
         public string building { get; set; }
 
         //Not from bGrid
@@ -54,6 +55,20 @@ namespace RoomChecker.Models
             }
         }
         public string assetType { get; set; }
+        public bool inBuilding
+        {
+            get
+            {
+                if (lastSeenDT > DateTime.Now.AddMinutes(-5))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
     }
 
 
