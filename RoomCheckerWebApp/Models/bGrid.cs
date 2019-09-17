@@ -50,7 +50,9 @@ namespace RoomChecker.Models
             {
                 // LastSeen = Unix timestamp is seconds past epoch
                 System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-                dtDateTime = dtDateTime.AddSeconds(this.lastSeen).ToLocalTime();
+                var CEtimeInfo = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
+                dtDateTime = TimeZoneInfo.ConvertTimeFromUtc(dtDateTime.AddSeconds(this.lastSeen), CEtimeInfo); 
+
                 return dtDateTime;
             }
         }
