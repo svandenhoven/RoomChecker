@@ -233,18 +233,23 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                 {
                     case 5448:
                         asset.assetType = "surfacehub.png";
+                        asset.assetName = "Surface Hub";
                         break;
                     case 5451:
-                        asset.assetType = "cleantrolley.jpg";
+                        asset.assetType = "postcar.jpg";
+                        asset.assetName = "Trolley 1";
                         break;
                     case 5465:
-                        asset.assetType = "postcar.jpg";
+                        asset.assetType = "cleantrolley.jpg";
+                        asset.assetName = "Cleaning Trolley 1";
                         break;
                     case 5656:
                         asset.assetType = "sandervd.jpg";
+                        asset.assetName = "Application Owner";
                         break;
                     default:
                         asset.assetType = "unknowntype.jpg";
+                        asset.assetName = "Unknown Asset";
                         break;
                 }
                 assets.Add(asset);

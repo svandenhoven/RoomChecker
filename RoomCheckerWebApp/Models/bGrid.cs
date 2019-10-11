@@ -57,6 +57,7 @@ namespace RoomChecker.Models
             }
         }
         public string assetType { get; set; }
+        public string assetName { get; set; }
         public bool inBuilding
         {
             get
