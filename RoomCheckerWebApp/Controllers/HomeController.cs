@@ -353,7 +353,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             if (!_cache.TryGetValue("bGridAssets", out List<bGridAsset> cachedAssets))
             {
                 _bGridAssets = await BuildingActionHelper.ExecuteGetAction<List<bGridAsset>>("api/assets", _roomsConfig);
-                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime/5));
                 _cache.Set("bGridAssets", _bGridAssets, cacheEntryOptionsShort);
             }
             else
