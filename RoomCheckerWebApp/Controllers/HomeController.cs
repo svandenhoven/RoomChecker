@@ -219,7 +219,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize] 
         public async Task<IActionResult> Assets()
         {
             await GetbGridAssets();
