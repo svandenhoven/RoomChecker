@@ -241,11 +241,11 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                         break;
                     case 5465:
                         asset.assetType = "cleantrolley.jpg";
-                        asset.assetName = "Cleaning Trolley 1";
+                        asset.assetName = "Cleaning 1";
                         break;
                     case 5656:
-                        asset.assetType = "sandervd.jpg";
-                        asset.assetName = "Application Owner";
+                        asset.assetType = "headbhv.jpg";
+                        asset.assetName = "Head BHV";
                         break;
                     default:
                         asset.assetType = "unknowntype.jpg";
