@@ -58,7 +58,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
-        [Authorize]
+        [Authorize(Policy = "MSFTOnly")]
         public IActionResult Dashboard()
         {
             var roomsConfig = new RoomsConfig();
@@ -102,7 +102,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             return View();
         }
 
-        [Authorize]
+        [Authorize(Policy = "MSFTOnly")]
         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
         {
             var checkDateTime = DateTime.Parse(dateTime);
@@ -140,13 +140,13 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
         }
 
 
-        [Authorize]
+        [Authorize(Policy = "MSFTOnly")]
         public IActionResult Bot()
         {
             return View();
         }
 
-        [Authorize]
+        [Authorize(Policy = "MSFTOnly")]
         public async Task<IActionResult> Rooms()
         {
             if (User.Identity.IsAuthenticated)
@@ -199,7 +199,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
 
         }
 
-        [Authorize]
+        [Authorize(Policy = "MSFTOnly")]
         public async Task<IActionResult> WorkRooms()
         {
             if (User.Identity.IsAuthenticated)
@@ -219,7 +219,7 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
             }
         }
 
-        [Authorize] 
+        [Authorize(Policy = "MSFTOnly")]
         public async Task<IActionResult> Assets()
         {
             await GetbGridAssets();
