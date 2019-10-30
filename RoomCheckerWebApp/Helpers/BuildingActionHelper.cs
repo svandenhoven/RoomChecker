@@ -14,11 +14,11 @@ namespace RoomChecker.Helpers
     {
 
 
-        public static HttpClient GetHttpClient(IOptions<RoomsConfig> roomConfig)
+        public static HttpClient GetHttpClient(bGridConfig config)
         {
-            var endpoint = roomConfig.Value.bGridEndPoint;
-            var user = roomConfig.Value.bGridUser;
-            var pw = roomConfig.Value.bGridPW;
+            var endpoint = config.bGridEndPoint;
+            var user = config.bGridUser;
+            var pw = config.bGridPW;
 
             var bGridClient = new HttpClient()
             {
@@ -32,9 +32,9 @@ namespace RoomChecker.Helpers
             return bGridClient;
         }
 
-        public static async Task<T> ExecuteGetAction<T>(string action, IOptions<RoomsConfig> roomConfig)
+        public static async Task<T> ExecuteGetAction<T>(string action, bGridConfig config)
         {
-            var bGridClient = GetHttpClient(roomConfig);
+            var bGridClient = GetHttpClient(config);
             var response = await bGridClient.GetAsync(action);
 
             if (response.IsSuccessStatusCode)

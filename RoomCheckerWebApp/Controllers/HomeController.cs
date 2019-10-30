@@ -31,10 +31,8 @@ namespace RoomChecker.Controllers
         private readonly IGraphSdkHelper _graphSdkHelper;
         private IMemoryCache _cache;
         private readonly IOptions<RoomsConfig> _roomsConfig;
-        private List<bGridOccpancy> _roomOccupancies = new List<bGridOccpancy>();
-        private List<bGridTemperature> _roomTemperatures = new List<bGridTemperature>();
-        private List<bGridIsland> _bGridIslands = new List<bGridIsland>();
         private List<bGridAsset> _bGridAssets = new List<bGridAsset>();
+        private TenantConfig _tenantConfig;
 
         public HomeController(IConfiguration configuration, IHostingEnvironment hostingEnvironment, IGraphSdkHelper graphSdkHelper, IMemoryCache memoryCache, IOptions<RoomsConfig> roomsConfig)
         {
@@ -43,6 +41,7 @@ namespace RoomChecker.Controllers
             _graphSdkHelper = graphSdkHelper;
             _cache = memoryCache;
             _roomsConfig = roomsConfig;
+            
         }
 
         [AllowAnonymous]
@@ -112,10 +111,6 @@ namespace RoomChecker.Controllers
 
             var room = GetRooms(type).Where<Room>(r => r.Name == roomId).First();
 
-            await GetbGridOccupancies();
-            await GetbGridTemperatures();
-            //           await GetbGridIslands();
-
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
                 room = await GetRoomData(room, checkDateTime);
@@ -146,81 +141,27 @@ namespace RoomChecker.Controllers
         }
 
         [Authorize(Policy = "MSFTOnly")]
-        public async Task<IActionResult> Rooms()
+        public IActionResult Rooms()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                await GetbGridOccupancies();
-                await GetbGridTemperatures();
-                //await GetbGridIslands();
-
-                var rooms = GetRooms("meet");
-                ViewBag.Message = "";
-                return View(rooms);
-            }
-            else
-            {
-                ViewBag.Message = "Please Sign-In first.";
-                return View(new List<Room>());
-            }
-
-            #region serverside roomscheck
-            //try
-            //{
-
-            //    if (User.Identity.IsAuthenticated)
-            //    {
-            //        if (!_cache.TryGetValue("_Rooms", out List<Room> roomsAvailability))
-            //        {
-            //            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-            //            var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier);
-            //            roomsAvailability = await GraphService.GetRoomsAvailabilityAsync(graphClient, HttpContext, rooms);
-            //            if (roomsAvailability != null)
-            //            {
-            //                var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(15));
-            //                // Save data in cache.
-            //                _cache.Set("_Rooms", roomsAvailability, cacheEntryOptions);
-            //                var json = JsonConvert.SerializeObject(roomsAvailability);
-            //            }
-            //        }
-            //        ViewBag.Message = "";
-            //        return View(roomsAvailability);
-            //    }
-            //    ViewBag.Message = "Please Sign-In first.";
-            //    return View(new List<Room>());
-            //}
-            //catch (Exception ex)
-            //{
-            //    ViewBag.Message = ex.Message;
-            //    return View(new List<Room>());
-            //}
-            #endregion
+            var rooms = GetRooms("meet");
+            ViewBag.Message = "";
+            return View(rooms);
 
         }
 
         [Authorize(Policy = "MSFTOnly")]
-        public async Task<IActionResult> WorkRooms()
+        public IActionResult WorkRooms()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                await GetbGridOccupancies();
-                await GetbGridTemperatures();
-                //await GetbGridIslands();
-
-                var rooms = GetRooms("work");
-                ViewBag.Message = "";
-                return View(rooms);
-            }
-            else
-            {
-                ViewBag.Message = "Please Sign-In first.";
-                return View(new List<Room>());
-            }
+            var rooms = GetRooms("work");
+            ViewBag.Message = "";
+            return View(rooms);
         }
 
         [Authorize(Policy = "MSFTOnly")]
         public async Task<IActionResult> Assets()
         {
+            _tenantConfig = ReadConfig(_roomsConfig);
+
             await GetbGridAssets();
             var knowAssets = new int[] { 5448, 5451, 5465, 5656 };
             var assetsList = _bGridAssets.Where(a => knowAssets.Contains(a.id));
@@ -264,21 +205,6 @@ namespace RoomChecker.Controllers
             return View(rooms);
         }
 
-        private async Task GetbGridTemperatures()
-        {
-            if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
-            {
-                _roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _roomsConfig);
-                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridTemperatures", _roomTemperatures, cacheEntryOptionsShort);
-            }
-            else
-            {
-                _roomTemperatures = cachedRoomTemperatures;
-            }
-        }
-
-
         private async Task<Room> GetRoomData(Room room, DateTime dt)
         {
             var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
@@ -288,30 +214,36 @@ namespace RoomChecker.Controllers
 
             var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
             room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
-            if (room.Nodes != null)
+            if (_tenantConfig.bGridConfig.bGridUser != "")
             {
-                var roomNodes = _roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
-                if (roomNodes != null)
-                {
-                    var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
-                    room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
+                var roomOccupancies = await GetbGridOccupancies();
+                var roomTemperatures = await GetbGridTemperatures();
 
-                    //Get Associated Island
-                    //var islands = _bGridIslands.Where(i => i.locations.Any(l => room.Nodes.Any(n => Convert.ToInt32(n.Id).Equals(l))));
-                    //if(islands != null)
-                    //{
-                    //    room.Island = islands.First();
-                    //}
-                }
-
-                var roomNodesTemp = _roomTemperatures.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
-                if (roomNodesTemp != null)
+                if (room.Nodes != null)
                 {
-                    var roomNodesTempLatest = roomNodesTemp.GroupBy(r => r.location_id).Select(ro => ro.OrderByDescending(x => x.timestamp).FirstOrDefault());
-                    if (roomNodesTemp.Count() > 0)
+                    var roomNodes = roomOccupancies.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                    if (roomNodes != null)
                     {
-                        var avgTemp = roomNodesTemp.Average(r => Convert.ToDecimal(r.value));
-                        room.Temperature = avgTemp;
+                        var occupiedNodes = roomNodes.Where(nodes => nodes.value == 2);
+                        room.Occupied = occupiedNodes == null ? -1 : occupiedNodes.Count() > 0 ? 2 : 0;
+
+                        //Get Associated Island
+                        //var islands = _bGridIslands.Where(i => i.locations.Any(l => room.Nodes.Any(n => Convert.ToInt32(n.Id).Equals(l))));
+                        //if(islands != null)
+                        //{
+                        //    room.Island = islands.First();
+                        //}
+                    }
+
+                    var roomNodesTemp = roomTemperatures.Where(r => room.Nodes.Where(ro => ro.Id == r.location_id.ToString()).Count() > 0);
+                    if (roomNodesTemp != null)
+                    {
+                        var roomNodesTempLatest = roomNodesTemp.GroupBy(r => r.location_id).Select(ro => ro.OrderByDescending(x => x.timestamp).FirstOrDefault());
+                        if (roomNodesTemp.Count() > 0)
+                        {
+                            var avgTemp = roomNodesTemp.Average(r => Convert.ToDecimal(r.value));
+                            room.Temperature = avgTemp;
+                        }
                     }
                 }
             }
@@ -319,31 +251,49 @@ namespace RoomChecker.Controllers
             return room;
         }
 
-        private async Task GetbGridOccupancies()
+        private async Task<List<bGridOccpancy>> GetbGridOccupancies()
         {
             if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
             {
-                _roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _roomsConfig);
+                var roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _tenantConfig.bGridConfig);
                 var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridOccupancies", _roomOccupancies, cacheEntryOptionsShort);
+                _cache.Set("bGridOccupancies", roomOccupancies, cacheEntryOptionsShort);
+                return roomOccupancies;
             }
             else
             {
-                _roomOccupancies = cachedRoomOccupancies;
+                return cachedRoomOccupancies;
             }
         }
 
-        private async Task GetbGridIslands()
+        private async Task<List<bGridTemperature>> GetbGridTemperatures()
         {
-            if (!_cache.TryGetValue("bGridLocations", out List<bGridIsland> cachedIslands))
+            if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
             {
-                _bGridIslands = await BuildingActionHelper.ExecuteGetAction<List<bGridIsland>>("api/islands", _roomsConfig);
+                var roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _tenantConfig.bGridConfig);
                 var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridLocations", _bGridIslands, cacheEntryOptionsShort);
+                _cache.Set("bGridTemperatures", roomTemperatures, cacheEntryOptionsShort);
+                return roomTemperatures;
             }
             else
             {
-                _bGridIslands = cachedIslands;
+                return cachedRoomTemperatures;
+            }
+        }
+
+        private async Task<List<bGridIsland>> GetbGridIslands()
+        {
+ 
+            if (!_cache.TryGetValue("bGridLocations", out List<bGridIsland> cachedIslands))
+            {
+                var bGridIslands = await BuildingActionHelper.ExecuteGetAction<List<bGridIsland>>("api/islands", _tenantConfig.bGridConfig);
+                var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
+                _cache.Set("bGridLocations", bGridIslands, cacheEntryOptionsShort);
+                return bGridIslands;
+            }
+            else
+            {
+                return cachedIslands;
             }
         }
 
@@ -351,7 +301,7 @@ namespace RoomChecker.Controllers
         {
             if (!_cache.TryGetValue("bGridAssets", out List<bGridAsset> cachedAssets))
             {
-                _bGridAssets = await BuildingActionHelper.ExecuteGetAction<List<bGridAsset>>("api/assets", _roomsConfig);
+                _bGridAssets = await BuildingActionHelper.ExecuteGetAction<List<bGridAsset>>("api/assets", _tenantConfig.bGridConfig);
                 var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime/5));
                 _cache.Set("bGridAssets", _bGridAssets, cacheEntryOptionsShort);
             }
@@ -363,70 +313,74 @@ namespace RoomChecker.Controllers
 
         private List<Room> GetRooms(string type)
         {
-            return ReadRooms(_roomsConfig, type);
+            _tenantConfig = ReadConfig(_roomsConfig);
+            var rooms = _tenantConfig.Rooms.Where(r => r.RoomType == type).OrderBy(r => r.Name).ToList<Room>();
+            return rooms;
         }
 
 
-        private List<Room> ReadRooms(IOptions<RoomsConfig> roomsConfig, string roomType)
+        private TenantConfig ReadConfig(IOptions<RoomsConfig> roomsConfig)
         {
-            if (!_cache.TryGetValue(roomType+"roomslist", out List<Room> cachedRooms))
+            if (!_cache.TryGetValue("tenantConfig", out TenantConfig cachedConfig))
             {
-                List<Room> rooms = new List<Room>();
+                TenantConfig tenantConfig = new TenantConfig();
                 if (roomsConfig.Value == null)
                 {
-                    return rooms;
+                    return cachedConfig;
                 }
 
                 switch (roomsConfig.Value.FileLocation)
                 {
                     case "LocalFile":
                         var json = System.IO.File.ReadAllText(roomsConfig.Value.URI);
-                        rooms = JsonConvert.DeserializeObject<List<Room>>(json);
+                        tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(json);
                         break;
                     case "AzureStorageFile":
                         using (var webClient = new WebClient())
                         {
                             var jsonWC = webClient.DownloadString(roomsConfig.Value.URI);
-                            rooms = JsonConvert.DeserializeObject<List<Room>>(jsonWC);
+                            tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(jsonWC);
                         }
                         break;
                     case "AzureStorageContainerAndTenantId":
                         var blobContainer = new CloudBlobContainer(new Uri(roomsConfig.Value.URI));
                         var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
-                        var blobName = tenantId.Value + ".json";
+                        var blobName = "dev-" + tenantId.Value + ".json";
                         CloudBlockBlob blob = blobContainer.GetBlockBlobReference(blobName);
                         if(blob.ExistsAsync().Result)
                         {
                             var jsonTid = blob.DownloadTextAsync().Result;
-                            rooms = JsonConvert.DeserializeObject<List<Room>>(jsonTid);
+                            tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(jsonTid);
                         }
                         break;
                     default:
                         break;
                 }
 
-                var bGridlocations = BuildingActionHelper.ExecuteGetAction<List<bGridLocation>>("api/locations", _roomsConfig).Result;
-                if (bGridlocations != null)
+                if (tenantConfig.bGridConfig.bGridUser != "")
                 {
-                    foreach (var room in rooms)
+                    var bGridlocations = BuildingActionHelper.ExecuteGetAction<List<bGridLocation>>("api/locations", tenantConfig.bGridConfig).Result;
+                    if (bGridlocations != null)
                     {
-                        if (room.Nodes.Count > 0)
+                        foreach (var room in tenantConfig.Rooms)
                         {
-                            var bGridLocation = room.Nodes.First().Id;
-                            room.X = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().x);
-                            room.Y = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().y);
-                        }
+                            if (room.Nodes.Count > 0)
+                            {
+                                var bGridLocation = room.Nodes.First().Id;
+                                room.X = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().x);
+                                room.Y = Convert.ToInt32(bGridlocations.Where(b => b.id.ToString() == bGridLocation).First().y);
+                            }
 
+                        }
                     }
                 }
-                rooms = rooms.Where(r => r.RoomType == roomType).OrderBy(r => r.Name).ToList<Room>();
                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set(roomType + "roomslist", rooms, cacheEntryOptions);
-                return rooms;
+                _cache.Set("tenantConfig", tenantConfig, cacheEntryOptions);
+                return tenantConfig;
             }
             else
             {
-                return cachedRooms;
+                return cachedConfig;
             }
         }
 

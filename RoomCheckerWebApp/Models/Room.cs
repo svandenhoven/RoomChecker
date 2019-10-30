@@ -7,17 +7,20 @@ using System.Threading.Tasks;
 
 namespace RoomChecker.Models
 {
-    public class HourSchedule
+    public class TenantConfig
     {
-        public bool Occupied { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public String Organizer { get; set; }
+        public bGridConfig bGridConfig { get; set; }
+        public List<Room> Rooms { get; set; }
+        public string TenantId { get; set; }
     }
-    public class Node
+
+    public class bGridConfig
     {
-        public string Id { get; set; }
+        public string bGridUser { get; set; }
+        public string bGridPW { get; set; }
+        public string bGridEndPoint { get; set; }
     }
+
     public class Room
     {
         public Room(int hours)
@@ -54,5 +57,17 @@ namespace RoomChecker.Models
         public decimal Temperature { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
+    }
+
+    public class HourSchedule
+    {
+        public bool Occupied { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public String Organizer { get; set; }
+    }
+    public class Node
+    {
+        public string Id { get; set; }
     }
 }
