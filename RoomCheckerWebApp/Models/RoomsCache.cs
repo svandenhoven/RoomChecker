@@ -1,5 +1,5 @@
-﻿//using MicrosoftGraphAspNetCoreConnectSample.Helpers;
-//using MicrosoftGraphAspNetCoreConnectSample.Models;
+﻿//using RoomChecker.Helpers;
+//using RoomChecker.Models;
 //using System;
 //using System.Collections.Generic;
 //using System.Linq;

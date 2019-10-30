@@ -6,24 +6,23 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MicrosoftGraphAspNetCoreConnectSample.Helpers;
+using RoomChecker.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
-using MicrosoftGraphAspNetCoreConnectSample.Models;
+using RoomChecker.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System;
 using Microsoft.Extensions.Caching.Memory;
-using RoomChecker.Models;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Net;
-using RoomChecker.Helpers;
-using MicrosoftGraphAspNetCoreConnectSample.Extensions;
+using RoomChecker.Extensions;
 using Microsoft.PowerBI.Api.V2;
 using Microsoft.Rest;
+using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
+namespace RoomChecker.Controllers
 {
     public class HomeController : Controller
     {
@@ -385,9 +384,22 @@ namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
                         rooms = JsonConvert.DeserializeObject<List<Room>>(json);
                         break;
                     case "AzureStorageFile":
-                        var webClient = new WebClient();
-                        var jsonAzure = webClient.DownloadString(roomsConfig.Value.URI);
-                        rooms = JsonConvert.DeserializeObject<List<Room>>(jsonAzure);
+                        using (var webClient = new WebClient())
+                        {
+                            var jsonWC = webClient.DownloadString(roomsConfig.Value.URI);
+                            rooms = JsonConvert.DeserializeObject<List<Room>>(jsonWC);
+                        }
+                        break;
+                    case "AzureStorageContainerAndTenantId":
+                        var blobContainer = new CloudBlobContainer(new Uri(roomsConfig.Value.URI));
+                        var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
+                        var blobName = tenantId.Value + ".json";
+                        CloudBlockBlob blob = blobContainer.GetBlockBlobReference(blobName);
+                        if(blob.ExistsAsync().Result)
+                        {
+                            var jsonTid = blob.DownloadTextAsync().Result;
+                            rooms = JsonConvert.DeserializeObject<List<Room>>(jsonTid);
+                        }
                         break;
                     default:
                         break;

@@ -10,10 +10,10 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Identity.Client;
 using Microsoft.Graph;
 using System.Linq;
-using MicrosoftGraphAspNetCoreConnectSample.Extensions;
+using RoomChecker.Extensions;
 using RoomChecker.Helpers;
 
-namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
+namespace RoomChecker.Helpers
 {
     public class GraphAuthProvider : IGraphAuthProvider
     {

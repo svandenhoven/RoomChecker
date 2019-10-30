@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <UserSecretsId>aspnet-MicrosoftGraphAspNetCoreConnectSample-ec1d62b9-d84d-45c8-8b3e-dc4e8b2ed850</UserSecretsId>
+    <UserSecretsId>aspnet-RoomChecker-ec1d62b9-d84d-45c8-8b3e-dc4e8b2ed850</UserSecretsId>
     <WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
     <Version>2.0.0</Version>
     <Authors>Mark Szabo</Authors>

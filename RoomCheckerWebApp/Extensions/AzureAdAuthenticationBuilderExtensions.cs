@@ -7,11 +7,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using MicrosoftGraphAspNetCoreConnectSample.Helpers;
+using RoomChecker.Helpers;
 using Microsoft.Identity.Client;
 using RoomChecker.Helpers;
 
-namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
+namespace RoomChecker.Extensions
 {
     public static class AzureAdAuthenticationBuilderExtensions
     {        

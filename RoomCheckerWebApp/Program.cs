@@ -6,7 +6,7 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace MicrosoftGraphAspNetCoreConnectSample
+namespace RoomChecker
 {
     public class Program
     {

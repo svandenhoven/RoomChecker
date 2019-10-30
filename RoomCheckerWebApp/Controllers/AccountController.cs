@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 using RoomChecker.Controllers;
 
-namespace MicrosoftGraphAspNetCoreConnectSample.Controllers
+namespace RoomChecker.Controllers
 {
     [Route("[controller]/[action]")]
     public class AccountController : Controller

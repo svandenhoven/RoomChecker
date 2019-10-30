@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Graph;
-using MicrosoftGraphAspNetCoreConnectSample.Models;
+using RoomChecker.Models;
 using Newtonsoft.Json;
 //using RoomChecker.Models;
 using System;
@@ -17,7 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MicrosoftGraphAspNetCoreConnectSample.Helpers
+namespace RoomChecker.Helpers
 {
     public static class GraphService
     {

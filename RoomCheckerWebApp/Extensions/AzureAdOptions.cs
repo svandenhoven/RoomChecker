@@ -1,4 +1,4 @@
-﻿namespace MicrosoftGraphAspNetCoreConnectSample.Extensions
+﻿namespace RoomChecker.Extensions
 {
     public class AzureAdOptions
     {

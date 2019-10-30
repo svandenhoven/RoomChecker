@@ -14,11 +14,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MicrosoftGraphAspNetCoreConnectSample.Extensions;
-using MicrosoftGraphAspNetCoreConnectSample.Helpers;
+using RoomChecker.Extensions;
+using RoomChecker.Helpers;
 using RoomChecker.Models;
 
-namespace MicrosoftGraphAspNetCoreConnectSample
+namespace RoomChecker
 {
     public class Startup
     {

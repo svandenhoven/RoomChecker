@@ -2,7 +2,7 @@
 using Microsoft.PowerBI.Api.V2;
 using Microsoft.PowerBI.Api.V2.Models;
 using Microsoft.Rest;
-using MicrosoftGraphAspNetCoreConnectSample.Extensions;
+using RoomChecker.Extensions;
 using RoomChecker.Models;
 using System;
 using System.Collections.Generic;
