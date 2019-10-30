@@ -41,7 +41,6 @@ namespace RoomChecker.Controllers
             _graphSdkHelper = graphSdkHelper;
             _cache = memoryCache;
             _roomsConfig = roomsConfig;
-            
         }
 
         [AllowAnonymous]
@@ -56,7 +55,7 @@ namespace RoomChecker.Controllers
             return View();
         }
 
-        [Authorize(Policy = "MSFTOnly")]
+        [Authorize]
         public IActionResult Dashboard()
         {
             var roomsConfig = new RoomsConfig();
@@ -100,9 +99,11 @@ namespace RoomChecker.Controllers
             return View();
         }
 
-        [Authorize(Policy = "MSFTOnly")]
+        [Authorize]
         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
         {
+            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;
 
@@ -117,12 +118,12 @@ namespace RoomChecker.Controllers
             }
             else
             {
-                if (!_cache.TryGetValue(roomId, out Room cachedRoom))
+                if (!_cache.TryGetValue(tenantId+"_"+roomId, out Room cachedRoom))
                 {
                     room = await GetRoomData(room, checkDateTime);
                     // Save data in cache.
                     var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                    _cache.Set(roomId, room, cacheEntryOptions);
+                    _cache.Set(tenantId + "_" + roomId, room, cacheEntryOptions);
                 }
                 else
                 {
@@ -134,13 +135,13 @@ namespace RoomChecker.Controllers
         }
 
 
-        [Authorize(Policy = "MSFTOnly")]
+        [Authorize]
         public IActionResult Bot()
         {
             return View();
         }
 
-        [Authorize(Policy = "MSFTOnly")]
+        [Authorize]
         public IActionResult Rooms()
         {
             var rooms = GetRooms("meet");
@@ -149,7 +150,7 @@ namespace RoomChecker.Controllers
 
         }
 
-        [Authorize(Policy = "MSFTOnly")]
+        [Authorize]
         public IActionResult WorkRooms()
         {
             var rooms = GetRooms("work");
@@ -157,7 +158,7 @@ namespace RoomChecker.Controllers
             return View(rooms);
         }
 
-        [Authorize(Policy = "MSFTOnly")]
+        [Authorize]
         public async Task<IActionResult> Assets()
         {
             _tenantConfig = ReadConfig(_roomsConfig);
@@ -253,11 +254,13 @@ namespace RoomChecker.Controllers
 
         private async Task<List<bGridOccpancy>> GetbGridOccupancies()
         {
-            if (!_cache.TryGetValue("bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
+            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+
+            if (!_cache.TryGetValue(tenantId + "_bGridOccupancies", out List<bGridOccpancy> cachedRoomOccupancies))
             {
                 var roomOccupancies = await BuildingActionHelper.ExecuteGetAction<List<bGridOccpancy>>("api/occupancy/office", _tenantConfig.bGridConfig);
                 var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridOccupancies", roomOccupancies, cacheEntryOptionsShort);
+                _cache.Set(tenantId + "_bGridOccupancies", roomOccupancies, cacheEntryOptionsShort);
                 return roomOccupancies;
             }
             else
@@ -268,11 +271,13 @@ namespace RoomChecker.Controllers
 
         private async Task<List<bGridTemperature>> GetbGridTemperatures()
         {
-            if (!_cache.TryGetValue("bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
+            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+
+            if (!_cache.TryGetValue(tenantId + "_bGridTemperatures", out List<bGridTemperature> cachedRoomTemperatures))
             {
                 var roomTemperatures = await BuildingActionHelper.ExecuteGetAction<List<bGridTemperature>>("api/locations/recent/temperature", _tenantConfig.bGridConfig);
                 var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridTemperatures", roomTemperatures, cacheEntryOptionsShort);
+                _cache.Set(tenantId + "_bGridTemperatures", roomTemperatures, cacheEntryOptionsShort);
                 return roomTemperatures;
             }
             else
@@ -283,12 +288,13 @@ namespace RoomChecker.Controllers
 
         private async Task<List<bGridIsland>> GetbGridIslands()
         {
- 
-            if (!_cache.TryGetValue("bGridLocations", out List<bGridIsland> cachedIslands))
+            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+
+            if (!_cache.TryGetValue(tenantId + "_bGridLocations", out List<bGridIsland> cachedIslands))
             {
                 var bGridIslands = await BuildingActionHelper.ExecuteGetAction<List<bGridIsland>>("api/islands", _tenantConfig.bGridConfig);
                 var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("bGridLocations", bGridIslands, cacheEntryOptionsShort);
+                _cache.Set(tenantId + "_bGridLocations", bGridIslands, cacheEntryOptionsShort);
                 return bGridIslands;
             }
             else
@@ -299,11 +305,13 @@ namespace RoomChecker.Controllers
 
         private async Task GetbGridAssets()
         {
-            if (!_cache.TryGetValue("bGridAssets", out List<bGridAsset> cachedAssets))
+            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+
+            if (!_cache.TryGetValue(tenantId + "_bGridAssets", out List<bGridAsset> cachedAssets))
             {
                 _bGridAssets = await BuildingActionHelper.ExecuteGetAction<List<bGridAsset>>("api/assets", _tenantConfig.bGridConfig);
                 var cacheEntryOptionsShort = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime/5));
-                _cache.Set("bGridAssets", _bGridAssets, cacheEntryOptionsShort);
+                _cache.Set(tenantId + "_bGridAssets", _bGridAssets, cacheEntryOptionsShort);
             }
             else
             {
@@ -321,7 +329,9 @@ namespace RoomChecker.Controllers
 
         private TenantConfig ReadConfig(IOptions<RoomsConfig> roomsConfig)
         {
-            if (!_cache.TryGetValue("tenantConfig", out TenantConfig cachedConfig))
+            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
+
+            if (!_cache.TryGetValue(tenantId+"_tenantConfig", out TenantConfig cachedConfig))
             {
                 TenantConfig tenantConfig = new TenantConfig();
                 if (roomsConfig.Value == null)
@@ -344,7 +354,6 @@ namespace RoomChecker.Controllers
                         break;
                     case "AzureStorageContainerAndTenantId":
                         var blobContainer = new CloudBlobContainer(new Uri(roomsConfig.Value.URI));
-                        var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
                         var blobName = "dev-" + tenantId.Value + ".json";
                         CloudBlockBlob blob = blobContainer.GetBlockBlobReference(blobName);
                         if(blob.ExistsAsync().Result)
@@ -375,7 +384,7 @@ namespace RoomChecker.Controllers
                     }
                 }
                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set("tenantConfig", tenantConfig, cacheEntryOptions);
+                _cache.Set(tenantId + "_tenantConfig", tenantConfig, cacheEntryOptions);
                 return tenantConfig;
             }
             else

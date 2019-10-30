@@ -53,13 +53,13 @@ namespace RoomChecker
             .AddCookie();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("MSFTOnly", policy => policy.RequireAssertion(context =>
-                     context.User.HasClaim(c=>
-                        c.Type == "preferred_username" && c.Value.ToString().EndsWith("@microsoft.com"))
-                     ));
-            });
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy("MSFTOnly", policy => policy.RequireAssertion(context =>
+            //         context.User.HasClaim(c=>
+            //            c.Type == "preferred_username" && c.Value.ToString().EndsWith("@microsoft.com"))
+            //         ));
+            //});
 
             // This sample uses an in-memory cache for tokens and subscriptions. Production apps will typically use some method of persistent storage.
             services.AddMemoryCache();
