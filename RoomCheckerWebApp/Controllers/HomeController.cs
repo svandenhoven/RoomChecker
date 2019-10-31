@@ -185,8 +185,8 @@ namespace RoomChecker.Controllers
                         asset.assetName = "Cleaning 1";
                         break;
                     case 5656:
-                        asset.assetType = "headbhv.jpg";
-                        asset.assetName = "Head BHV";
+                        asset.assetType = "unknowntype.jpg";
+                        asset.assetName = "Unknown Asset";
                         break;
                     default:
                         asset.assetType = "unknowntype.jpg";
