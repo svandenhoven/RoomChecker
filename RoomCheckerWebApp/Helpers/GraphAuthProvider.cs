@@ -63,7 +63,14 @@ namespace RoomChecker.Helpers
 
             try
             {
-                var result = await cca.AcquireTokenSilentAsync(scopes, accounts.First());
+                var account = accounts.Where(u => u.HomeAccountId.ObjectId == userId);
+                if (account.Count()==0) throw new ServiceException(new Error
+                {
+                    Code = "UserNotFound",
+                    Message = "User not found in token cache. Maybe the server was restarted."
+                });
+
+                var result = await cca.AcquireTokenSilentAsync(scopes, account.FirstOrDefault());
                 return result.AccessToken;
             }
 
