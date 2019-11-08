@@ -4,6 +4,7 @@
 */
 
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Microsoft.Graph;
 
 namespace RoomChecker.Helpers
@@ -35,6 +36,14 @@ namespace RoomChecker.Helpers
             return _graphClient;
         }
 
+        public string GetAccessToken(string userId, string[] scopes)
+        {
+            // Passing tenant ID to the sample auth provider to use as a cache key
+            var accessToken = _authProvider.GetUserAccessTokenAsync(userId, scopes).Result;
+
+            return accessToken;
+        }
+
         public string GetPBIAccessToken(string userId, string[] scopes)
         {
             
@@ -48,5 +57,6 @@ namespace RoomChecker.Helpers
     {
         GraphServiceClient GetAuthenticatedClient(string userId, string[] scopes);
         string GetPBIAccessToken(string userId, string[] scopes);
+        string GetAccessToken(string userId, string[] scopes);
     }
 }

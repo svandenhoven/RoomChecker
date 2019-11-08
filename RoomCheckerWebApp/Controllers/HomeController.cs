@@ -58,17 +58,18 @@ namespace RoomChecker.Controllers
         [Authorize]
         public IActionResult Dashboard()
         {
-            var roomsConfig = new RoomsConfig();
-            _configuration.Bind("RoomsConfig", roomsConfig);
+            _tenantConfig = ReadConfig(_roomsConfig);
+            if(_tenantConfig.PBIConfig == null)
+            {
+                return View();
+            }
+            var workspaceId = _tenantConfig.PBIConfig.WorkspaceId;
+            var reportId = _tenantConfig.PBIConfig.ReportId;
+            var powerBiApiUrl = "https://api.powerbi.com/";
+            string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
 
             var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-            string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
             var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
-            //if (pbiAccessToken != null)
-            //{
-            var workspaceId = roomsConfig.WorkspaceId;
-            var reportId = roomsConfig.ReportId;
-            var powerBiApiUrl = "https://api.powerbi.com/";
 
             using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
             {
@@ -86,7 +87,6 @@ namespace RoomChecker.Controllers
                     ViewBag.ReportName = report.Name;
                     ViewBag.AccessToken = pbiAccessToken;
                 }
-                //}
             }
             return View();
         }
@@ -151,6 +151,13 @@ namespace RoomChecker.Controllers
         }
 
         [Authorize]
+        public IActionResult O365Rooms()
+        {
+            var rooms = GetRoomsFromO365().Result;
+            return View(rooms);
+        }
+
+        [Authorize]
         public IActionResult WorkRooms()
         {
             var rooms = GetRooms("work");
@@ -161,38 +168,21 @@ namespace RoomChecker.Controllers
         [Authorize]
         public async Task<IActionResult> Assets()
         {
+            var assets = new List<bGridAsset>();
             _tenantConfig = ReadConfig(_roomsConfig);
 
+            if (_tenantConfig.KnownAssets.Count == 0)
+                return View(assets);
+
             await GetbGridAssets();
-            var knowAssets = new int[] { 5448, 5451, 5465, 5656 };
-            var assetsList = _bGridAssets.Where(a => knowAssets.Contains(a.id));
-            var assets = new List<bGridAsset>();
+            var knowAssets = _tenantConfig.KnownAssets;
+            var assetsList = _bGridAssets.Where(a => knowAssets.Count(k => k.Id == a.id) > 0);
+
 
             foreach(var asset in assetsList)
             {
-                switch(asset.id)
-                {
-                    case 5448:
-                        asset.assetType = "surfacehub.png";
-                        asset.assetName = "Surface Hub";
-                        break;
-                    case 5451:
-                        asset.assetType = "postcar.jpg";
-                        asset.assetName = "Trolley 1";
-                        break;
-                    case 5465:
-                        asset.assetType = "cleantrolley.jpg";
-                        asset.assetName = "Cleaning 1";
-                        break;
-                    case 5656:
-                        asset.assetType = "unknowntype.jpg";
-                        asset.assetName = "Unknown Asset";
-                        break;
-                    default:
-                        asset.assetType = "unknowntype.jpg";
-                        asset.assetName = "Unknown Asset";
-                        break;
-                }
+                asset.assetType = knowAssets.Where(k => k.Id == asset.id).First().Type;
+                asset.assetName = knowAssets.Where(k => k.Id == asset.id).First().Name;
                 assets.Add(asset);
             }
             return View(assets);
@@ -204,6 +194,19 @@ namespace RoomChecker.Controllers
         {
             var rooms = GetRooms("meet");
             return View(rooms);
+        }
+
+        private async Task<List<Room>> GetRoomsFromO365()
+        {
+            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
+
+            var azureOptions = new AzureAdOptions();
+            _configuration.Bind("AzureAd", azureOptions);
+
+            var token = _graphSdkHelper.GetAccessToken(identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
+            var rooms = await GraphService.GetRoomsLists(token);
+
+            return rooms;
         }
 
         private async Task<Room> GetRoomData(Room room, DateTime dt)

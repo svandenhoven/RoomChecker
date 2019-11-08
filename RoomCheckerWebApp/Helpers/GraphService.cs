@@ -9,21 +9,24 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Graph;
 using RoomChecker.Models;
 using Newtonsoft.Json;
-//using RoomChecker.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using Room = Microsoft.Graph.Room;
+using CheckedRoom = RoomChecker.Models.Room;
 
 namespace RoomChecker.Helpers
 {
     public static class GraphService
     {
-        public static async Task<List<Room>> GetRoomsAvailabilityAsync(GraphServiceClient graphClient, HttpContext httpContext, List<Room> rooms)
+        public static async Task<List<CheckedRoom>> GetRoomsAvailabilityAsync(GraphServiceClient graphClient, HttpContext httpContext, List<CheckedRoom> rooms)
         {
-            var roomsAvailability = new List<Room>();
+            var roomsAvailability = new List<CheckedRoom>();
             foreach (var room in rooms)
             {
                 roomsAvailability.Add(await GraphService.GetRoomAvailability(graphClient, room, httpContext, DateTime.Now));
@@ -32,9 +35,9 @@ namespace RoomChecker.Helpers
             return roomsAvailability;
         }
 
-        public static async Task<Room> GetRoomAvailability(GraphServiceClient graphClient, Room room, HttpContext httpContext, DateTime dateTime)
+        public static async Task<CheckedRoom> GetRoomAvailability(GraphServiceClient graphClient, CheckedRoom room, HttpContext httpContext, DateTime dateTime)
         {
-            Room roomRecent = new Room(24)
+            CheckedRoom roomRecent = new CheckedRoom(24)
             {
                 Id = room.Id,
                 HasMailBox = room.HasMailBox,
@@ -67,7 +70,53 @@ namespace RoomChecker.Helpers
             }
         }
 
-        private static async Task<Room> GetRoomSchedule(GraphServiceClient graphClient, Room room, DateTime dateTime, Room roomRecent)
+        public  static async Task<List<CheckedRoom>> GetRoomsLists(string accessToken)
+        {
+            var rooms = new List<CheckedRoom>();
+
+            try
+            {
+                var action = "beta/me/findRooms";
+                var roomList = await DoGraphRequest<GraphRoomList>(accessToken, action);
+                if (roomList.value.Count > 0)
+                {
+                    foreach (var graphroom in roomList.value)
+                    {
+                        var room = new CheckedRoom(24)
+                        {
+                            Id = graphroom.Address,
+                            Name = graphroom.Address.Split('@')[0]
+                        };
+                        rooms.Add(room);
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                var msg = e.Message;
+            }
+
+            return rooms;
+        }
+
+        private static async Task<T> DoGraphRequest<T>(string accessToken, string action)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.BaseAddress = new Uri("https://graph.microsoft.com/");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                var result = await httpClient.GetAsync(action);
+                if (result.IsSuccessStatusCode)
+                {
+                    var jsonString = await result.Content.ReadAsStringAsync();
+                    var jsonObject = JsonConvert.DeserializeObject<T>(jsonString);
+                    return jsonObject;
+                }
+                return default;
+            }
+        }
+
+        private static async Task<CheckedRoom> GetRoomSchedule(GraphServiceClient graphClient, CheckedRoom room, DateTime dateTime, CheckedRoom roomRecent)
         {
             try
             {

@@ -18,11 +18,5 @@ namespace RoomChecker.Models
         public string FileLocation { get; set; }
         public string URI { get; set; }
         public int CacheTime { get; set; }
-
-        public string bGridUser { get; set; }
-        public string bGridPW { get; set; }
-        public string bGridEndPoint { get; set; }
-        public string WorkspaceId { get; set; }
-        public string ReportId { get; set; }
     }
 }

@@ -7,11 +7,25 @@ using System.Threading.Tasks;
 
 namespace RoomChecker.Models
 {
+    public class KnowAsset
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Type { get; set; }
+    }
+
+    public class PBIConfig
+    {
+        public string WorkspaceId { get; set; }
+        public string ReportId { get; set; }
+    }
     public class TenantConfig
     {
         public bGridConfig bGridConfig { get; set; }
+        public PBIConfig PBIConfig { get; set; }
         public List<Room> Rooms { get; set; }
         public string TenantId { get; set; }
+        public List<KnowAsset> KnownAssets { get; set; }
     }
 
     public class bGridConfig
@@ -69,5 +83,10 @@ namespace RoomChecker.Models
     public class Node
     {
         public string Id { get; set; }
+    }
+
+    public class GraphRoomList
+    {
+        public List<Microsoft.Graph.EmailAddress> value;
     }
 }
