@@ -171,7 +171,7 @@ namespace RoomChecker.Controllers
             var assets = new List<bGridAsset>();
             _tenantConfig = ReadConfig(_roomsConfig);
 
-            if (_tenantConfig.KnownAssets.Count == 0)
+            if (_tenantConfig.KnownAssets == null || _tenantConfig.KnownAssets.Count == 0)
                 return View(assets);
 
             await GetbGridAssets();
@@ -325,8 +325,10 @@ namespace RoomChecker.Controllers
         private List<Room> GetRooms(string type)
         {
             _tenantConfig = ReadConfig(_roomsConfig);
-            var rooms = _tenantConfig.Rooms.Where(r => r.RoomType == type).OrderBy(r => r.Name).ToList<Room>();
-            return rooms;
+            if(_tenantConfig.Rooms != null)
+                return _tenantConfig.Rooms.Where(r => r.RoomType == type).OrderBy(r => r.Name).ToList<Room>();
+            else
+                return new List<Room>();
         }
 
 
@@ -363,6 +365,10 @@ namespace RoomChecker.Controllers
                         {
                             var jsonTid = blob.DownloadTextAsync().Result;
                             tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(jsonTid);
+                        }
+                        else
+                        {
+                            return tenantConfig;
                         }
                         break;
                     default:
