@@ -112,7 +112,7 @@ namespace RoomChecker.Helpers
                     var jsonObject = JsonConvert.DeserializeObject<T>(jsonString);
                     return jsonObject;
                 }
-                return default;
+                return default(T);
             }
         }
 
