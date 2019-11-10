@@ -330,17 +330,15 @@ namespace RoomChecker.Helpers
             }
             else
             {
-                ConfidentialClientApplication app = new ConfidentialClientApplication(
-                    ApplicationId,
-                    "https://localhost:44334/signin-oidc",
-                    new ClientCredential(ApplicationSecret),
-                    null,
-                    null);
+                var app = ConfidentialClientApplicationBuilder.Create(ApplicationId)
+                    .WithRedirectUri("https://localhost:44334/signin-oidc")
+                    .WithClientSecret(ApplicationSecret)
+                    .Build();
 
                 string[] scopes = new string[] { ResourceUrl+"/.default" };
                 try
                 {
-                    result = await app.AcquireTokenForClientAsync(scopes);
+                    result = await app.AcquireTokenForClient(scopes).ExecuteAsync();
                 }
                 catch (MsalServiceException ex)
                 {

@@ -21,27 +21,47 @@ using RoomChecker.Extensions;
 using Microsoft.PowerBI.Api.V2;
 using Microsoft.Rest;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Identity.Web;
+using Graph = Microsoft.Graph;
 
 namespace RoomChecker.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly IConfiguration _configuration;
         private readonly IHostingEnvironment _env;
-        private readonly IGraphSdkHelper _graphSdkHelper;
         private IMemoryCache _cache;
         private readonly IOptions<RoomsConfig> _roomsConfig;
         private List<bGridAsset> _bGridAssets = new List<bGridAsset>();
         private TenantConfig _tenantConfig;
+        readonly ITokenAcquisition _tokenAcquisition;
+        readonly WebOptions _webOptions;
 
-        public HomeController(IConfiguration configuration, IHostingEnvironment hostingEnvironment, IGraphSdkHelper graphSdkHelper, IMemoryCache memoryCache, IOptions<RoomsConfig> roomsConfig)
+        public HomeController(IConfiguration configuration, 
+            IHostingEnvironment hostingEnvironment, 
+            IMemoryCache memoryCache, 
+            IOptions<RoomsConfig> roomsConfig, 
+            ITokenAcquisition tokenAcquisition,
+            IOptions<WebOptions> webOptionValue)
         {
             _configuration = configuration;
             _env = hostingEnvironment;
-            _graphSdkHelper = graphSdkHelper;
             _cache = memoryCache;
             _roomsConfig = roomsConfig;
+            _tokenAcquisition = tokenAcquisition;
+            _webOptions = webOptionValue.Value;
         }
+
+        private Graph::GraphServiceClient GetGraphServiceClient(string[] scopes)
+        {
+            return GraphServiceClientFactory.GetAuthenticatedGraphClient(async () =>
+            {
+                string result = await _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(scopes);
+                return result;
+            }, _webOptions.GraphApiUrl);
+        }
+
 
         [AllowAnonymous]
         // Load user's profile.
@@ -58,36 +78,36 @@ namespace RoomChecker.Controllers
         [Authorize]
         public IActionResult Dashboard()
         {
-            _tenantConfig = ReadConfig(_roomsConfig);
-            if(_tenantConfig.PBIConfig == null)
-            {
-                return View();
-            }
-            var workspaceId = _tenantConfig.PBIConfig.WorkspaceId;
-            var reportId = _tenantConfig.PBIConfig.ReportId;
-            var powerBiApiUrl = "https://api.powerbi.com/";
-            string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
+            //_tenantConfig = ReadConfig(_roomsConfig);
+            //if(_tenantConfig.PBIConfig == null)
+            //{
+            //    return View();
+            //}
+            //var workspaceId = _tenantConfig.PBIConfig.WorkspaceId;
+            //var reportId = _tenantConfig.PBIConfig.ReportId;
+            //var powerBiApiUrl = "https://api.powerbi.com/";
+            //string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
 
-            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-            var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
+            //var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
+            //var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
 
-            using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
-            {
-                Microsoft.PowerBI.Api.V2.Models.Report report = null;
+            //using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
+            //{
+            //    Microsoft.PowerBI.Api.V2.Models.Report report = null;
 
-                if (!string.IsNullOrEmpty(workspaceId))
-                {
-                    report = client.Reports.GetReportInGroup(workspaceId, reportId);
-                }
+            //    if (!string.IsNullOrEmpty(workspaceId))
+            //    {
+            //        report = client.Reports.GetReportInGroup(workspaceId, reportId);
+            //    }
 
-                if (report != null)
-                {
-                    ViewBag.EmbedUrl = report.EmbedUrl;
-                    ViewBag.ReportId = report.Id;
-                    ViewBag.ReportName = report.Name;
-                    ViewBag.AccessToken = pbiAccessToken;
-                }
-            }
+            //    if (report != null)
+            //    {
+            //        ViewBag.EmbedUrl = report.EmbedUrl;
+            //        ViewBag.ReportId = report.Id;
+            //        ViewBag.ReportName = report.Name;
+            //        ViewBag.AccessToken = pbiAccessToken;
+            //    }
+            //}
             return View();
         }
 
@@ -203,10 +223,10 @@ namespace RoomChecker.Controllers
             var azureOptions = new AzureAdOptions();
             _configuration.Bind("AzureAd", azureOptions);
 
-            var token = _graphSdkHelper.GetAccessToken(identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
-            var rooms = await GraphService.GetRoomsLists(token);
+            //var token = _graphSdkHelper.GetAccessToken(identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
+            //var rooms = await GraphService.GetRoomsLists(token);
 
-            return rooms;
+            return null;
         }
 
         private async Task<Room> GetRoomData(Room room, DateTime dt)
@@ -216,7 +236,9 @@ namespace RoomChecker.Controllers
             var azureOptions = new AzureAdOptions();
             _configuration.Bind("AzureAd", azureOptions);
 
-            var graphClient = _graphSdkHelper.GetAuthenticatedClient(identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
+            //var graphClient = (identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
+            Graph::GraphServiceClient graphClient = GetGraphServiceClient(new[] { "Calendars.Read.Shared" });
+
             room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
             if (_tenantConfig.bGridConfig.bGridUser != "")
             {

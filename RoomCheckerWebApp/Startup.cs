@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
 using RoomChecker.Extensions;
 using RoomChecker.Helpers;
 using RoomChecker.Models;
@@ -34,8 +36,6 @@ namespace RoomChecker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<RoomsConfig>(Configuration.GetSection("RoomsConfig"));
-
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
@@ -43,32 +43,32 @@ namespace RoomChecker
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddAuthentication(sharedOptions =>
-            {
-                sharedOptions.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                sharedOptions.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                sharedOptions.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-            })
-            .AddAzureAd(options => Configuration.Bind("AzureAd", options))
-            .AddCookie();
+            services.AddOptions();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            //services.AddAuthorization(options =>
-            //{
-            //    options.AddPolicy("MSFTOnly", policy => policy.RequireAssertion(context =>
-            //         context.User.HasClaim(c=>
-            //            c.Type == "preferred_username" && c.Value.ToString().EndsWith("@microsoft.com"))
-            //         ));
-            //});
+            services.Configure<RoomsConfig>(Configuration.GetSection("RoomsConfig"));
+
+            // Token acquisition service based on MSAL.NET
+            // and chosen token cache implementation
+            services.AddMicrosoftIdentityPlatformAuthentication(Configuration)
+               .AddMsal(Configuration, new string[] { "Calendars.Read.Shared" })
+               .AddInMemoryTokenCaches();
+
+            // Add Graph
+            services.AddGraphService(Configuration);
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MSFTOnly", policy => policy.RequireAssertion(context =>
+                     context.User.HasClaim(c =>
+                        c.Type == "preferred_username" && c.Value.ToString().EndsWith("@microsoft.com"))
+                     ));
+            });
 
             // This sample uses an in-memory cache for tokens and subscriptions. Production apps will typically use some method of persistent storage.
             services.AddMemoryCache();
             services.AddSession();
-
-            // Add application services.
-            //services.AddSingleton<IConfiguration>(Configuration);
-            services.AddSingleton<IGraphAuthProvider, GraphAuthProvider>();
-            services.AddTransient<IGraphSdkHelper, GraphSdkHelper>();
 
             services.Configure<HstsOptions>(options =>
             {

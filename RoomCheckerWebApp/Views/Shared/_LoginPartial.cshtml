@@ -1,18 +1,14 @@
-﻿<!--  Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license.
-        See LICENSE in the source repository root for complete license information. -->
-
+﻿@using Microsoft.Identity.Web
 @if (User.Identity.IsAuthenticated)
 {
-    var username = User.Identity.Name ?? User.FindFirst("preferred_username").Value;
-
     <ul class="nav navbar-nav navbar-right">
-        <li class="navbar-text">@username</li>
-        <li><a asp-area="" asp-controller="Account" asp-action="SignOut">Sign Out</a></li>
+        <li class="navbar-text">Hello @User.GetDisplayName()!</li>
+        <li><a asp-area="AzureAD" asp-controller="Account" asp-action="SignOut">Sign out</a></li>
     </ul>
 }
 else
 {
     <ul class="nav navbar-nav navbar-right">
-        <li><a asp-area="" asp-controller="Account" asp-action="Signin">Sign in</a></li>
+        <li><a asp-area="AzureAD" asp-controller="Account" asp-action="SignIn">Sign in</a></li>
     </ul>
 }
