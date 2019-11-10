@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoomChecker", "RoomCheckerW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Web", "Microsoft.Identity.Web\Microsoft.Identity.Web.csproj", "{CE1A2DAB-C0B5-49D7-A570-1CFF4B7BD65E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Web.Test", "Microsoft.Identity.Web.Test\Microsoft.Identity.Web.Test.csproj", "{BB3C5E48-F057-4CBD-BECD-EF6ED234E58F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{CE1A2DAB-C0B5-49D7-A570-1CFF4B7BD65E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE1A2DAB-C0B5-49D7-A570-1CFF4B7BD65E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE1A2DAB-C0B5-49D7-A570-1CFF4B7BD65E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB3C5E48-F057-4CBD-BECD-EF6ED234E58F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB3C5E48-F057-4CBD-BECD-EF6ED234E58F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB3C5E48-F057-4CBD-BECD-EF6ED234E58F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB3C5E48-F057-4CBD-BECD-EF6ED234E58F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
