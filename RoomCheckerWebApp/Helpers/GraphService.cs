@@ -95,7 +95,6 @@ namespace RoomChecker.Helpers
             {
                 var msg = e.Message;
             }
-
             return rooms;
         }
 

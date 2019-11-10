@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoomChecker", "RoomCheckerWebApp\RoomChecker.csproj", "{8CFC9CD3-FFB9-4EED-8734-4678333D41C3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Web", "..\..\active-directory-aspnetcore-webapp-openidconnect-v2\Microsoft.Identity.Web\Microsoft.Identity.Web.csproj", "{3A563383-78ED-4EDF-AB09-9D12E4D933E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{8CFC9CD3-FFB9-4EED-8734-4678333D41C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CFC9CD3-FFB9-4EED-8734-4678333D41C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CFC9CD3-FFB9-4EED-8734-4678333D41C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A563383-78ED-4EDF-AB09-9D12E4D933E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A563383-78ED-4EDF-AB09-9D12E4D933E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A563383-78ED-4EDF-AB09-9D12E4D933E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A563383-78ED-4EDF-AB09-9D12E4D933E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

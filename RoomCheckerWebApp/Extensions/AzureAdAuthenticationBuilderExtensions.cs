@@ -7,9 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using RoomChecker.Helpers;
 using Microsoft.Identity.Client;
-using RoomChecker.Helpers;
 
 namespace RoomChecker.Extensions
 {
@@ -83,14 +81,12 @@ namespace RoomChecker.Extensions
                         var memoryCache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
                         var graphScopes = _azureOptions.GraphScopes.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                        var cca = new ConfidentialClientApplication(
-                            _azureOptions.ClientId,
-                            _azureOptions.BaseUrl + _azureOptions.CallbackPath,
-                            new ClientCredential(_azureOptions.ClientSecret),
-                            new SessionTokenCache(identifier, memoryCache).GetCacheInstance(),
-                            //new AzureTableTokenCache(identifier,_azureOptions.TokenCacheConnectionString, _azureOptions.TokenCacheTableName).GetCacheInstance(), 
-                            null);
-                        var result = await cca.AcquireTokenByAuthorizationCodeAsync(code, graphScopes);
+                        var cca = ConfidentialClientApplicationBuilder.Create(_azureOptions.ClientId)
+                            .WithRedirectUri(_azureOptions.BaseUrl + _azureOptions.CallbackPath)
+                            .WithClientSecret(_azureOptions.ClientSecret)
+                            .Build();
+
+                        var result = await cca.AcquireTokenByAuthorizationCode(graphScopes, code).ExecuteAsync();
 
                         // Check whether the login is from the MSA tenant. 
                         // The sample uses this attribute to disable UI buttons for unsupported operations when the user is logged in with an MSA account.
