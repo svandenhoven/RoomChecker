@@ -19,6 +19,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using Room = Microsoft.Graph.Room;
 using CheckedRoom = RoomChecker.Models.Room;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace RoomChecker.Helpers
 {
@@ -121,12 +122,14 @@ namespace RoomChecker.Helpers
             {
                 var beginTime = new DateTimeTimeZone
                 {
-                    DateTime = dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    DateTime = dateTime.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    TimeZone = "UTC"
                 };
 
                 var endTime = new DateTimeTimeZone
                 {
-                    DateTime = dateTime.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    DateTime = dateTime.Date.AddDays(0).AddHours(23).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    TimeZone = "UTC"
                 };
 
                 var roomFreeBusy = await graphClient.Users[room.Id].Calendar.GetSchedule(new List<string> { room.Id }, endTime, beginTime).Request().PostAsync();

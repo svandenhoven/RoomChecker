@@ -58,7 +58,7 @@ namespace RoomChecker.Controllers
         {
             return GraphServiceClientFactory.GetAuthenticatedGraphClient(async () =>
             {
-                string result = await _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(scopes, tenantId);
+                string result = await _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(scopes);
                 return result;
             }, _webOptions.GraphApiUrl);
         }
@@ -80,7 +80,9 @@ namespace RoomChecker.Controllers
         [AuthorizeForScopes(Scopes = new[] { "https://analysis.windows.net/powerbi/api/.default" })]
         public IActionResult Dashboard()
         {
+            _tenantId = GetTenantId(null);
             _tenantConfig = ReadConfig(_roomsConfig);
+
             if (_tenantConfig.PBIConfig == null)
             {
                 return View();
@@ -212,16 +214,19 @@ namespace RoomChecker.Controllers
         }
 
         [Authorize]
-        public IActionResult WorkRooms()
+        public IActionResult WorkRooms(string tenantName = null)
         {
+            _tenantId = GetTenantId(tenantName);
             var rooms = GetRooms("work");
             ViewBag.Message = "";
             return View(rooms);
         }
 
         [Authorize]
-        public async Task<IActionResult> Assets()
+        public async Task<IActionResult> Assets(string tenantName = null)
         {
+            _tenantId = GetTenantId(tenantName);
+
             var assets = new List<bGridAsset>();
             _tenantConfig = ReadConfig(_roomsConfig);
 
@@ -244,8 +249,9 @@ namespace RoomChecker.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult TeamsRooms()
+        public IActionResult TeamsRooms(string tenantName = null)
         {
+            _tenantId = GetTenantId(tenantName);
             var rooms = GetRooms("meet");
             return View(rooms);
         }
@@ -365,7 +371,7 @@ namespace RoomChecker.Controllers
             }
         }
 
-        private List<Room> GetRooms(string type, string tenantName=null)
+        private List<Room> GetRooms(string type)
         {
             _tenantConfig = ReadConfig(_roomsConfig);
             if(_tenantConfig.Rooms != null)
@@ -375,7 +381,7 @@ namespace RoomChecker.Controllers
         }
 
 
-        private TenantConfig ReadConfig(IOptions<RoomsConfig> roomsConfig, string tenantName = null)
+        private TenantConfig ReadConfig(IOptions<RoomsConfig> roomsConfig)
         {
             //var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
 
