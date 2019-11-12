@@ -65,7 +65,8 @@ function GetRoomStatusOnDate(id, showbGrid) {
         {
             roomId: id,
             dateTime: dt,
-            type: roomType
+            type: roomType,
+            tenantName: _tenantId
         },
         function (data) {
             var itemCell = document.getElementById('item_' + data.name);

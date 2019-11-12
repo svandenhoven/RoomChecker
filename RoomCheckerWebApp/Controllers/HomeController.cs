@@ -37,6 +37,7 @@ namespace RoomChecker.Controllers
         private TenantConfig _tenantConfig;
         readonly ITokenAcquisition _tokenAcquisition;
         readonly WebOptions _webOptions;
+        private string _tenantId;
 
         public HomeController(IConfiguration configuration, 
             IHostingEnvironment hostingEnvironment, 
@@ -53,11 +54,11 @@ namespace RoomChecker.Controllers
             _webOptions = webOptionValue.Value;
         }
 
-        private Graph::GraphServiceClient GetGraphServiceClient(string[] scopes)
+        private Graph::GraphServiceClient GetGraphServiceClient(string[] scopes, string tenantId)
         {
             return GraphServiceClientFactory.GetAuthenticatedGraphClient(async () =>
             {
-                string result = await _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(scopes);
+                string result = await _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(scopes, tenantId);
                 return result;
             }, _webOptions.GraphApiUrl);
         }
@@ -75,7 +76,7 @@ namespace RoomChecker.Controllers
             return View();
         }
 
-        //[Authorize(policy: "MSFTOnly")]
+        [Authorize(policy: "MSFTOnly")]
         [AuthorizeForScopes(Scopes = new[] { "https://analysis.windows.net/powerbi/api/.default" })]
         public IActionResult Dashboard()
         {
@@ -120,9 +121,9 @@ namespace RoomChecker.Controllers
         }
 
         [Authorize]
-        public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type)
+        public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type, string tenantName)
         {
-            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+            _tenantId = GetTenantId(tenantName);
 
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;
@@ -142,16 +143,16 @@ namespace RoomChecker.Controllers
                 
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
-                room = await GetRoomData(room, checkDateTime);
+                room = await GetRoomData(room, checkDateTime, _tenantId);
             }
             else
             {
-                if (!_cache.TryGetValue(tenantId+"_"+roomId, out Room cachedRoom))
+                if (!_cache.TryGetValue(_tenantId + "_"+roomId, out Room cachedRoom))
                 {
-                    room = await GetRoomData(room, checkDateTime);
+                    room = await GetRoomData(room, checkDateTime, _tenantId);
                     // Save data in cache.
                     var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                    _cache.Set(tenantId + "_" + roomId, room, cacheEntryOptions);
+                    _cache.Set(_tenantId + "_" + roomId, room, cacheEntryOptions);
                 }
                 else
                 {
@@ -170,12 +171,36 @@ namespace RoomChecker.Controllers
         }
 
         [Authorize]
-        public IActionResult Rooms()
+        public IActionResult Rooms(string tenantName = null)
         {
+            _tenantId = GetTenantId(tenantName);
+
             var rooms = GetRooms("meet");
             ViewBag.Message = "";
+            ViewBag.Tenant = tenantName;
             return View(rooms);
+        }
 
+        private string GetTenantId(string tenantName)
+        {
+            string tenantId = null;
+            if (tenantName == null)
+            {
+                tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+            }
+            else
+            {
+                switch (tenantName.ToLower())
+                {
+                    case "microsoft305":
+                        tenantId = "9e021cc9-7821-437d-af4f-41ae85cc1ca5";
+                        break;
+                    default:
+                        tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault().Value;
+                        break;
+                }
+            }
+            return tenantId;
         }
 
         [AuthorizeForScopes(Scopes = new[] { "User.ReadBasic.All" })]
@@ -225,7 +250,7 @@ namespace RoomChecker.Controllers
             return View(rooms);
         }
 
-        private async Task<Room> GetRoomData(Room room, DateTime dt)
+        private async Task<Room> GetRoomData(Room room, DateTime dt, string tenantId)
         {
             var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
 
@@ -233,7 +258,7 @@ namespace RoomChecker.Controllers
             _configuration.Bind("AzureAd", azureOptions);
 
             //var graphClient = (identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
-            Graph::GraphServiceClient graphClient = GetGraphServiceClient(new[] { "Calendars.Read.Shared" });
+            Graph::GraphServiceClient graphClient = GetGraphServiceClient(new[] { "Calendars.Read.Shared" }, tenantId);
 
             room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
             if (_tenantConfig.bGridConfig.bGridUser != "")
@@ -340,7 +365,7 @@ namespace RoomChecker.Controllers
             }
         }
 
-        private List<Room> GetRooms(string type)
+        private List<Room> GetRooms(string type, string tenantName=null)
         {
             _tenantConfig = ReadConfig(_roomsConfig);
             if(_tenantConfig.Rooms != null)
@@ -350,11 +375,11 @@ namespace RoomChecker.Controllers
         }
 
 
-        private TenantConfig ReadConfig(IOptions<RoomsConfig> roomsConfig)
+        private TenantConfig ReadConfig(IOptions<RoomsConfig> roomsConfig, string tenantName = null)
         {
-            var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
+            //var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
 
-            if (!_cache.TryGetValue(tenantId+"_tenantConfig", out TenantConfig cachedConfig))
+            if (!_cache.TryGetValue(_tenantId+"_tenantConfig", out TenantConfig cachedConfig))
             {
                 TenantConfig tenantConfig = new TenantConfig();
                 if (roomsConfig.Value == null)
@@ -377,7 +402,7 @@ namespace RoomChecker.Controllers
                         break;
                     case "AzureStorageContainerAndTenantId":
                         var blobContainer = new CloudBlobContainer(new Uri(roomsConfig.Value.URI));
-                        var blobName = "dev-" + tenantId.Value + ".json";
+                        var blobName = "dev-" + _tenantId + ".json";
                         CloudBlockBlob blob = blobContainer.GetBlockBlobReference(blobName);
                         if(blob.ExistsAsync().Result)
                         {
@@ -411,7 +436,7 @@ namespace RoomChecker.Controllers
                     }
                 }
                 var cacheEntryOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(_roomsConfig.Value.CacheTime));
-                _cache.Set(tenantId + "_tenantConfig", tenantConfig, cacheEntryOptions);
+                _cache.Set(_tenantId + "_tenantConfig", tenantConfig, cacheEntryOptions);
                 return tenantConfig;
             }
             else
