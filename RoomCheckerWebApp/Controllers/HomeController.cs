@@ -114,18 +114,11 @@ namespace RoomChecker.Controllers
             return View();
         }
 
-        [AllowAnonymous]
-        // Load user's profile.
-        public IActionResult Reserve(string Id)
-        {
-            var id = Id;
-            return View();
-        }
-
         [Authorize]
         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type, string tenantName)
         {
             _tenantId = GetTenantId(tenantName);
+            _tenantConfig = ReadConfig(_roomsConfig);
 
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;
@@ -141,8 +134,10 @@ namespace RoomChecker.Controllers
             {
                 room.Id = $"cnfe{roomId}@microsoft.com";
                 room.Name = roomId;
-            }
-                
+                room.HasMailBox = true;
+            };
+
+
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
                 room = await GetRoomData(room, checkDateTime, _tenantId);
@@ -165,12 +160,6 @@ namespace RoomChecker.Controllers
             return Json(room);
         }
 
-
-        [Authorize]
-        public IActionResult Bot()
-        {
-            return View();
-        }
 
         [Authorize]
         public IActionResult Rooms(string tenantName = null)
@@ -205,11 +194,16 @@ namespace RoomChecker.Controllers
             return tenantId;
         }
 
+        [Authorize(policy: "MSFTOnly")]
         [AuthorizeForScopes(Scopes = new[] { "User.ReadBasic.All" })]
-        public IActionResult O365Rooms()
+        public IActionResult O365Rooms(string tenantName = null)
         {
+            _tenantId = GetTenantId(tenantName);
+            _tenantConfig = ReadConfig(_roomsConfig);
+
             var accessToken = _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(new[] { "User.ReadBasic.All" }).Result;
             var rooms = GraphService.GetRoomsLists(accessToken).Result;
+            ViewBag.Tenant = tenantName;
             return View(rooms);
         }
 
