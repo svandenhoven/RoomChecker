@@ -23,10 +23,10 @@ using Microsoft.Rest;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.Identity.Web;
 using Graph = Microsoft.Graph;
+using Microsoft.Identity.Client;
 
 namespace RoomChecker.Controllers
 {
-    [Authorize]
     public class HomeController : Controller
     {
         private readonly IConfiguration _configuration;
@@ -75,39 +75,39 @@ namespace RoomChecker.Controllers
             return View();
         }
 
-        [Authorize]
+        //[Authorize(policy: "MSFTOnly")]
+        [AuthorizeForScopes(Scopes = new[] { "https://analysis.windows.net/powerbi/api/.default" })]
         public IActionResult Dashboard()
         {
-            //_tenantConfig = ReadConfig(_roomsConfig);
-            //if(_tenantConfig.PBIConfig == null)
-            //{
-            //    return View();
-            //}
-            //var workspaceId = _tenantConfig.PBIConfig.WorkspaceId;
-            //var reportId = _tenantConfig.PBIConfig.ReportId;
-            //var powerBiApiUrl = "https://api.powerbi.com/";
-            //string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
+            _tenantConfig = ReadConfig(_roomsConfig);
+            if (_tenantConfig.PBIConfig == null)
+            {
+                return View();
+            }
+            var workspaceId = _tenantConfig.PBIConfig.WorkspaceId;
+            var reportId = _tenantConfig.PBIConfig.ReportId;
+            var powerBiApiUrl = "https://api.powerbi.com/";
+            string[] pBIScopes = { "https://analysis.windows.net/powerbi/api/.default" };
 
-            //var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-            //var pbiAccessToken = _graphSdkHelper.GetPBIAccessToken(identifier, pBIScopes);
+            var pbiAccessToken = _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(pBIScopes).Result;
 
-            //using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
-            //{
-            //    Microsoft.PowerBI.Api.V2.Models.Report report = null;
+            using (var client = new PowerBIClient(new Uri(powerBiApiUrl), new TokenCredentials(pbiAccessToken, "Bearer")))
+                {
+                    Microsoft.PowerBI.Api.V2.Models.Report report = null;
 
-            //    if (!string.IsNullOrEmpty(workspaceId))
-            //    {
-            //        report = client.Reports.GetReportInGroup(workspaceId, reportId);
-            //    }
+                    if (!string.IsNullOrEmpty(workspaceId))
+                    {
+                        report = client.Reports.GetReportInGroup(workspaceId, reportId);
+                    }
 
-            //    if (report != null)
-            //    {
-            //        ViewBag.EmbedUrl = report.EmbedUrl;
-            //        ViewBag.ReportId = report.Id;
-            //        ViewBag.ReportName = report.Name;
-            //        ViewBag.AccessToken = pbiAccessToken;
-            //    }
-            //}
+                    if (report != null)
+                    {
+                        ViewBag.EmbedUrl = report.EmbedUrl;
+                        ViewBag.ReportId = report.Id;
+                        ViewBag.ReportName = report.Name;
+                        ViewBag.AccessToken = pbiAccessToken;
+                    }
+                }
             return View();
         }
 
@@ -130,8 +130,16 @@ namespace RoomChecker.Controllers
             TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
             checkDateTime = TimeZoneInfo.ConvertTimeToUtc(checkDateTime, tz);
 
-            var room = GetRooms(type).Where<Room>(r => r.Name == roomId).First();
-
+            var room = new Room(24);
+            var rooms = GetRooms(type).Where<Room>(r => r.Name == roomId);
+            if (rooms.Count() > 0)
+                room = rooms.First();
+            else
+            {
+                room.Id = $"cnfe{roomId}@microsoft.com";
+                room.Name = roomId;
+            }
+                
             if (Math.Abs(timediff.TotalMinutes) > 30)
             {
                 room = await GetRoomData(room, checkDateTime);
@@ -170,10 +178,11 @@ namespace RoomChecker.Controllers
 
         }
 
-        [Authorize]
+        [AuthorizeForScopes(Scopes = new[] { "User.ReadBasic.All" })]
         public IActionResult O365Rooms()
         {
-            var rooms = GetRoomsFromO365().Result;
+            var accessToken = _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(new[] { "User.ReadBasic.All" }).Result;
+            var rooms = GraphService.GetRoomsLists(accessToken).Result;
             return View(rooms);
         }
 
@@ -214,19 +223,6 @@ namespace RoomChecker.Controllers
         {
             var rooms = GetRooms("meet");
             return View(rooms);
-        }
-
-        private async Task<List<Room>> GetRoomsFromO365()
-        {
-            var identifier = User.FindFirst(Startup.ObjectIdentifierType)?.Value;
-
-            var azureOptions = new AzureAdOptions();
-            _configuration.Bind("AzureAd", azureOptions);
-
-            //var token = _graphSdkHelper.GetAccessToken(identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
-            //var rooms = await GraphService.GetRoomsLists(token);
-
-            return null;
         }
 
         private async Task<Room> GetRoomData(Room room, DateTime dt)

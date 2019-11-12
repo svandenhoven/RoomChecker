@@ -76,7 +76,7 @@ namespace RoomChecker.Helpers
 
             try
             {
-                var action = "beta/me/findRooms";
+                var action = "beta/me/findRooms(RoomList='cfdgnec@microsoft.com')";
                 var roomList = await DoGraphRequest<GraphRoomList>(accessToken, action);
                 if (roomList.value.Count > 0)
                 {
@@ -85,7 +85,7 @@ namespace RoomChecker.Helpers
                         var room = new CheckedRoom(24)
                         {
                             Id = graphroom.Address,
-                            Name = graphroom.Address.Split('@')[0]
+                            Name = graphroom.Address.Split('@')[0].Substring(4,4)
                         };
                         rooms.Add(room);
                     }

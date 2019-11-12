@@ -61,6 +61,7 @@ namespace RoomChecker
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            //See: https://docs.microsoft.com/en-us/aspnet/core/security/authorization/policies?view=aspnetcore-2.2
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("MSFTOnly", policy => policy.RequireAssertion(context =>
@@ -93,8 +94,7 @@ namespace RoomChecker
             }
             else
             {
-                app.UseDeveloperExceptionPage();
-                //app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler("/Home/Error");
             }
 
             app.UseHttpsRedirection();
