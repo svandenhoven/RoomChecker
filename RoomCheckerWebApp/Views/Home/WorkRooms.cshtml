@@ -124,11 +124,12 @@ else
         crossorigin="anonymous"></script>
 <script>
     var rooms = [];
-                                    @foreach (var d in Model)
-                                    {
+    @foreach (var d in Model)
+    {
         @: rooms.push("@d.Name");
-                                    }
+    }
     var roomType = 'work';
+    var _tenantId = '';
 </script>
 
 <script src="~/js/RoomChecker.js">

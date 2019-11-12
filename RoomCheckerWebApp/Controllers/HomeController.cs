@@ -263,10 +263,12 @@ namespace RoomChecker.Controllers
             var azureOptions = new AzureAdOptions();
             _configuration.Bind("AzureAd", azureOptions);
 
-            //var graphClient = (identifier, azureOptions.GraphScopes.Split(new[] { ' ' }));
-            Graph::GraphServiceClient graphClient = GetGraphServiceClient(new[] { "Calendars.Read.Shared" }, tenantId);
+            if (room.HasMailBox)
+            {
+                Graph::GraphServiceClient graphClient = GetGraphServiceClient(new[] { "Calendars.Read.Shared" }, tenantId);
+                room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
+            }
 
-            room = await GraphService.GetRoomAvailability(graphClient, room, HttpContext, dt);
             if (_tenantConfig.bGridConfig.bGridUser != "")
             {
                 var roomOccupancies = await GetbGridOccupancies();
