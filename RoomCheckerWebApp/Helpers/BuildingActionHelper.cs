@@ -23,7 +23,7 @@ namespace RoomChecker.Helpers
             var bGridClient = new HttpClient()
             {
                 BaseAddress = new Uri(endpoint),
-                Timeout = new TimeSpan(0, 0, 2)
+                Timeout = new TimeSpan(0, 0, 20)
             };
 
 

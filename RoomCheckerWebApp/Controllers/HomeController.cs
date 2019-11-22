@@ -24,6 +24,8 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.Identity.Web;
 using Graph = Microsoft.Graph;
 using Microsoft.Identity.Client;
+using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.WindowsAzure.Storage.Auth;
 
 namespace RoomChecker.Controllers
 {
@@ -66,13 +68,8 @@ namespace RoomChecker.Controllers
 
         [AllowAnonymous]
         // Load user's profile.
-        public IActionResult Index(string email)
+        public IActionResult Index()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-
-            }
-
             return View();
         }
 
@@ -81,7 +78,7 @@ namespace RoomChecker.Controllers
         public IActionResult Dashboard()
         {
             _tenantId = GetTenantId(null);
-            _tenantConfig = ReadConfig(_roomsConfig);
+            _tenantConfig = ReadConfig(_roomsConfig).Result;
 
             if (_tenantConfig.PBIConfig == null)
             {
@@ -118,7 +115,7 @@ namespace RoomChecker.Controllers
         public async Task<JsonResult> GetRoomStatusOnDate(string roomId, string dateTime, string type, string tenantName)
         {
             _tenantId = GetTenantId(tenantName);
-            _tenantConfig = ReadConfig(_roomsConfig);
+            _tenantConfig = await ReadConfig(_roomsConfig);
 
             var checkDateTime = DateTime.Parse(dateTime);
             var timediff = DateTime.Now - checkDateTime;
@@ -162,7 +159,7 @@ namespace RoomChecker.Controllers
 
 
         [Authorize]
-        public IActionResult Rooms(string tenantName = null)
+        public async Task<IActionResult> Rooms(string tenantName = null)
         {
             _tenantId = GetTenantId(tenantName);
 
@@ -196,10 +193,10 @@ namespace RoomChecker.Controllers
 
         [Authorize(policy: "MSFTOnly")]
         [AuthorizeForScopes(Scopes = new[] { "User.ReadBasic.All" })]
-        public IActionResult O365Rooms(string tenantName = null)
+        public async Task<IActionResult> O365Rooms(string tenantName = null)
         {
             _tenantId = GetTenantId(tenantName);
-            _tenantConfig = ReadConfig(_roomsConfig);
+            _tenantConfig = await ReadConfig(_roomsConfig);
 
             var accessToken = _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(new[] { "User.ReadBasic.All" }).Result;
             var rooms = GraphService.GetRoomsLists(accessToken).Result;
@@ -208,7 +205,7 @@ namespace RoomChecker.Controllers
         }
 
         [Authorize]
-        public IActionResult WorkRooms(string tenantName = null)
+        public async Task<IActionResult> WorkRooms(string tenantName = null)
         {
             _tenantId = GetTenantId(tenantName);
             var rooms = GetRooms("work");
@@ -222,7 +219,7 @@ namespace RoomChecker.Controllers
             _tenantId = GetTenantId(tenantName);
 
             var assets = new List<bGridAsset>();
-            _tenantConfig = ReadConfig(_roomsConfig);
+            _tenantConfig = await ReadConfig(_roomsConfig);
 
             if (_tenantConfig.KnownAssets == null || _tenantConfig.KnownAssets.Count == 0)
                 return View(assets);
@@ -369,7 +366,7 @@ namespace RoomChecker.Controllers
 
         private List<Room> GetRooms(string type)
         {
-            _tenantConfig = ReadConfig(_roomsConfig);
+            _tenantConfig = ReadConfig(_roomsConfig).Result;
             if(_tenantConfig.Rooms != null)
                 return _tenantConfig.Rooms.Where(r => r.RoomType == type).OrderBy(r => r.Name).ToList<Room>();
             else
@@ -377,7 +374,7 @@ namespace RoomChecker.Controllers
         }
 
 
-        private TenantConfig ReadConfig(IOptions<RoomsConfig> roomsConfig)
+        private async Task<TenantConfig> ReadConfig(IOptions<RoomsConfig> roomsConfig)
         {
             //var tenantId = User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/identity/claims/tenantid").FirstOrDefault();
 
@@ -388,6 +385,8 @@ namespace RoomChecker.Controllers
                 {
                     return cachedConfig;
                 }
+
+                var blobName = "dev-" + _tenantId + ".json";
 
                 switch (roomsConfig.Value.FileLocation)
                 {
@@ -402,14 +401,24 @@ namespace RoomChecker.Controllers
                             tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(jsonWC);
                         }
                         break;
-                    case "AzureStorageContainerAndTenantId":
+                    case "AzureStorageContainerAndTenantIdSAS":
                         var blobContainer = new CloudBlobContainer(new Uri(roomsConfig.Value.URI));
-                        var blobName = "dev-" + _tenantId + ".json";
                         CloudBlockBlob blob = blobContainer.GetBlockBlobReference(blobName);
-                        if(blob.ExistsAsync().Result)
+                        if (blob.ExistsAsync().Result)
                         {
-                            var jsonTid = blob.DownloadTextAsync().Result;
-                            tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(jsonTid);
+                            var jsonTidSAS = blob.DownloadTextAsync().Result;
+                            tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(jsonTidSAS);
+                        }
+                        else
+                        {
+                            return tenantConfig;
+                        }
+                        break;
+                    case "AzureStorageContainerAndTenantIdMI":
+                        var jsonTidMI = await ReadConfigBlob(blobName);
+                        if(jsonTidMI != null)
+                        {
+                            tenantConfig = JsonConvert.DeserializeObject<TenantConfig>(jsonTidMI);
                         }
                         else
                         {
@@ -422,7 +431,7 @@ namespace RoomChecker.Controllers
 
                 if (tenantConfig.bGridConfig.bGridUser != "")
                 {
-                    var bGridlocations = BuildingActionHelper.ExecuteGetAction<List<bGridLocation>>("api/locations", tenantConfig.bGridConfig).Result;
+                    var bGridlocations = await BuildingActionHelper.ExecuteGetAction<List<bGridLocation>>("api/locations", tenantConfig.bGridConfig);
                     if (bGridlocations != null)
                     {
                         foreach (var room in tenantConfig.Rooms)
@@ -445,6 +454,31 @@ namespace RoomChecker.Controllers
             {
                 return cachedConfig;
             }
+        }
+
+        private async Task<string> ReadConfigBlob(string FileName)
+        {
+            var accessToken = await GetAccessTokenAsync();
+
+            var tokenCredential = new TokenCredential(accessToken);
+            var storageCredentials = new StorageCredentials(tokenCredential);
+            var blobContainer = new CloudBlobContainer(new Uri($"https://mindparkstorage.blob.core.windows.net/roomchecker"), storageCredentials);
+            CloudBlockBlob blob = blobContainer.GetBlockBlobReference(FileName);
+
+            if (await blob.ExistsAsync())
+            {
+                return await blob.DownloadTextAsync();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private async Task<string> GetAccessTokenAsync()
+        {
+            var tokenProvider = new AzureServiceTokenProvider();
+            return await tokenProvider.GetAccessTokenAsync("https://storage.azure.com/");
         }
 
         [AllowAnonymous]
