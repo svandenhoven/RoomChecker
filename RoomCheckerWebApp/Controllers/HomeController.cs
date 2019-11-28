@@ -124,13 +124,13 @@ namespace RoomChecker.Controllers
             checkDateTime = TimeZoneInfo.ConvertTimeToUtc(checkDateTime, tz);
 
             var room = new Room(24);
-            var rooms = GetRooms(type).Where<Room>(r => r.Name == roomId);
+            var rooms = GetRooms(type).Where<Room>(r => r.Id == roomId);
             if (rooms.Count() > 0)
                 room = rooms.First();
             else
             {
-                room.Id = $"cnfe{roomId}@microsoft.com";
-                room.Name = roomId;
+                room.Id = roomId;
+                room.Name = roomId.Split('@')[0];
                 room.HasMailBox = true;
             };
 
@@ -191,17 +191,23 @@ namespace RoomChecker.Controllers
             return tenantId;
         }
 
-        [Authorize(policy: "MSFTOnly")]
+        [Authorize]
         [AuthorizeForScopes(Scopes = new[] { "User.ReadBasic.All" })]
-        public async Task<IActionResult> O365Rooms(string tenantName = null)
+        public async Task<IActionResult> O365Rooms(string tenantName = null, string roomListAddress = null)
         {
             _tenantId = GetTenantId(tenantName);
             _tenantConfig = await ReadConfig(_roomsConfig);
+            roomListAddress = roomListAddress ?? _tenantConfig.PreferredRoomList;
 
             var accessToken = _tokenAcquisition.GetAccessTokenOnBehalfOfUserAsync(new[] { "User.ReadBasic.All" }).Result;
-            var rooms = GraphService.GetRoomsLists(accessToken).Result;
+            var roomLists = await GraphService.GetRoomLists(accessToken);
+            roomListAddress = roomListAddress ?? roomLists.value.FirstOrDefault().Address;
+
+            var rooms = await GraphService.GetRooms(accessToken, roomListAddress);
+
             ViewBag.Tenant = tenantName;
-            return View(rooms);
+            ViewBag.RoomListAddress = roomListAddress;
+            return View(new O365Rooms { RoomLists = roomLists, Rooms = rooms});
         }
 
         [Authorize]

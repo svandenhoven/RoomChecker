@@ -39,14 +39,14 @@ else
             {
 
                 <!-- Modal -->
-                <div id="Modal_@(item.Name)" class="modal fade" role="dialog">
+                <div id="Modal_@(item.Id.Split('@')[0])" class="modal fade" role="dialog">
                     <div class="modal-dialog">
 
                         <!-- Modal content-->
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h3 class="modal-title">Floor @(floor.Key), Room @(item.Name)</h3>
+                                <h3 class="modal-title">Floor @(floor.Key), Room @(item.Id.Split('@')[0])</h3>
                             </div>
                             <div class="modal-body">
                                 <p>
@@ -58,14 +58,14 @@ else
                                     @switch (floor.Key)
                                     {
                                         case 1:
-                                            <img id="@(item.Name)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.X))*(300/60)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
+                                            <img id="@(item.Id.Split('@')[0])_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.X))*(300/60)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
                                             break;
                                         case 2:
                                         case 3:
-                                            <img id="@(item.Name)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
+                                            <img id="@(item.Id.Split('@')[0])_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/45)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/75))px;" />
                                             break;
                                         case 4:
-                                            <img id="@(item.Name)_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/25)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/45))px;" />
+                                            <img id="@(item.Id.Split('@')[0])_dot" src="~/images/dot.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.X))*(300/25)))px; top: @(Convert.ToInt16(item.Y*-1)*(400/45))px;" />
                                             break;
                                     };
                                 </div>
@@ -78,20 +78,20 @@ else
                     </div>
                 </div>
 
-                <div class="gallery" id="item_@(item.Name)" onclick="javascript:$('#Modal_@(item.Name)').modal('show'); ">
-                    <div id="occupied_@(item.Name)" class="label label-default" style="visibility:hidden">&nbsp;</div>
-                    <div class="roomName">@Html.DisplayFor(modelItem => item.Name)</div>
+                <div class="gallery" id="item_@(item.Id.Split('@')[0])" onclick="javascript:$('#Modal_@(item.Id.Split('@')[0])').modal('show'); ">
+                    <div id="occupied_@(item.Id.Split('@')[0])" class="label label-default" style="visibility:hidden">&nbsp;</div>
+                    <div class="roomName">@(item.Name)</div>
                     <div class="capacity">@Html.DisplayFor(modelItem => item.Capacity)p @Html.DisplayFor(modelItem => item.AudioVideo)</div>
                     <div class="desc">
-                        <div class="status" id="status_@(item.Name)">Checking...</div>
-                        <div class="planning" id="planning_@(item.Name)">&nbsp;</div>
+                        <div class="status" id="status_@(item.Id.Split('@')[0])">Checking...</div>
+                        <div class="planning" id="planning_@(item.Id.Split('@')[0])">&nbsp;</div>
                     </div>
                     <div id="scheduleLine">
                         <table border="1" align="center">
                             <tr>
                                 @for (int i = 8; i < 19; i++)
                                 {
-                                    <td class="unknown"  title="@i - @i+1" id="@(item.Name)-h-@i">
+                                    <td class="unknown" title="@i - @i+1" id="@(item.Id.Split('@')[0])-h-@i">
                                         &nbsp;
                                     </td>
                                 }
@@ -109,13 +109,13 @@ else
                     </div>
 
                     <!--
-            <div style="align-content:center">
-                <button id="lightOn_@(item.Name)" type="button" onclick="" class="btn btn-default">On</button>
-                <button id="lightOff_@(item.Name)" type="button" onclick="" class="btn btn-default">Off</button>
-            </div>
-            -->
+    <div style="align-content:center">
+        <button id="lightOn_@(item.Id.Split('@')[0])" type="button" onclick="" class="btn btn-default">On</button>
+        <button id="lightOff_@(item.Id.Split('@')[0])" type="button" onclick="" class="btn btn-default">Off</button>
+    </div>
+    -->
 
-                    <span id="label_@(item.Name)" class="label label-default">@(item.Type) </span>
+                    <span id="label_@(item.Id.Split('@')[0])" class="label label-default">@(item.Type) </span>
                 </div>
             }
         </fieldset>
@@ -129,9 +129,10 @@ else
         crossorigin="anonymous"></script>
 <script>
     var rooms = [];
+    var domain = '@@' + '@Model.First().Id.Split('@')[1]';
     @foreach (var d in Model)
     {
-        @: rooms.push("@d.Name");
+        @: rooms.push("@d.Id.Split('@')[0]");
     }
     var roomType = 'meet';
     var _tenantId = '@ViewBag.Tenant';

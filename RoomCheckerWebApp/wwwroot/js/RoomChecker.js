@@ -63,13 +63,13 @@ function GetRoomStatusOnDate(id, showbGrid) {
 
     $.getJSON("/Home/GetRoomStatusOnDate",
         {
-            roomId: id,
+            roomId: id+domain,
             dateTime: dt,
             type: roomType,
             tenantName: _tenantId
         },
         function (data) {
-            var itemCell = document.getElementById('item_' + data.name);
+            var itemCell = document.getElementById('item_' + id);
             if (data.hasMailBox) {
                 if (data.available) {
 
@@ -101,7 +101,7 @@ function GetRoomStatusOnDate(id, showbGrid) {
                 itemCell.className = "gallery blue";
             }
 
-            var label = document.getElementById('occupied_' + data.name);
+            var label = document.getElementById('occupied_' + id);
             if (showbGrid) {
 
                 switch (data.occupied) {

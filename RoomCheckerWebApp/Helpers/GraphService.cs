@@ -71,13 +71,20 @@ namespace RoomChecker.Helpers
             }
         }
 
-        public  static async Task<List<CheckedRoom>> GetRoomsLists(string accessToken)
+        public static async Task<GraphRoomList> GetRoomLists(string accessToken)
+        {
+            var action = $"beta/me/findRoomLists";
+            GraphRoomList roomLists = await DoGraphRequest<GraphRoomList>(accessToken, action);
+            return roomLists;
+        }
+
+        public  static async Task<List<CheckedRoom>> GetRooms(string accessToken, string roomListAddress)
         {
             var rooms = new List<CheckedRoom>();
 
             try
             {
-                var action = "beta/me/findRooms(RoomList='cfdgnec@microsoft.com')";
+                var action = $"beta/me/findRooms(RoomList='{roomListAddress}')";
                 var roomList = await DoGraphRequest<GraphRoomList>(accessToken, action);
                 if (roomList.value.Count > 0)
                 {
@@ -86,7 +93,7 @@ namespace RoomChecker.Helpers
                         var room = new CheckedRoom(24)
                         {
                             Id = graphroom.Address,
-                            Name = graphroom.Address.Split('@')[0].Substring(4,4)
+                            Name = graphroom.Name
                         };
                         rooms.Add(room);
                     }

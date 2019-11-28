@@ -21,6 +21,7 @@ namespace RoomChecker.Models
     }
     public class TenantConfig
     {
+        public string PreferredRoomList { get; set; }
         public bGridConfig bGridConfig { get; set; }
         public PBIConfig PBIConfig { get; set; }
         public List<Room> Rooms { get; set; }
@@ -88,5 +89,11 @@ namespace RoomChecker.Models
     public class GraphRoomList
     {
         public List<Microsoft.Graph.EmailAddress> value;
+    }
+
+    public class O365Rooms
+    {
+        public GraphRoomList RoomLists { get; set; }
+        public List<Room> Rooms { get; set; }
     }
 }
