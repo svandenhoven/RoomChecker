@@ -19,13 +19,22 @@ else
     <p></p>
     <input type="datetime-local" name="checkTime" id="checkTime">
     <button type="button" class="btn btn-primary" onclick="javascript: SetStatusOnDate()">Check Date</button>
-    <p></p>
+    <H2>Floors:</H2>
     @foreach (var floor in Model.GroupBy(r => r.Floor))
     {
         <button type="button" onclick="javascript:toggleFloorButton(this)" class="btn btn-primary" data-toggle="collapse" data-target="#F-@floor.Key">@floor.Key</button>
     }
-    <button type="button" class="btn btn-primary" onclick="javascript: ShowAvailableOnly()">Available</button>
+
+    <H2>Filters:</H2>
+    @: Available Only:
+    <label class="switch">
+        <input type="checkbox" checked id="avialableOnlyCheckBox" onclick="ShowAvailableOnly()">
+        <span class="slider"></span>
+    </label>
+
 }
+
+
 
 <p></p>
 
@@ -139,11 +148,19 @@ else
     var _tenantId = '@ViewBag.Tenant';
 
     function ShowAvailableOnly() {
-        rooms.forEach(function (room) {
-            if ($('#status_' + room).text() != 'Available') {
-                $('#item_' + room).hide();
-            }
-        });
+          var checkBox = document.getElementById("avialableOnlyCheckBox");
+        if (checkBox.checked == true) {
+            rooms.forEach(function (room) {
+                if ($('#status_' + room).text() != 'Available') {
+                    $('#item_' + room).hide();
+                }
+            });
+        }
+        else {
+            rooms.forEach(function (room) {
+                $('#item_' + room).show();
+            });
+        }
     }
 </script>
 

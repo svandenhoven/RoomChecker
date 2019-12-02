@@ -93,6 +93,7 @@ function GetRoomStatusOnDate(id, showbGrid) {
                     else
                         $('#planning_' + id).text('rest of day');
                     itemCell.className = "gallery pink";
+                    $('#item_' + id).hide();
                 }
             }
             else {
