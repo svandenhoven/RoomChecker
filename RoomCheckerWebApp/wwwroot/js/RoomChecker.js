@@ -167,3 +167,19 @@ function GetRoomStatus(id) {
     dt.value = getDateString();
     GetRoomStatusOnDate(id, true);
 }
+
+function ShowAvailableOnly() {
+    var checkBox = document.getElementById("avialableOnlyCheckBox");
+    if (checkBox.checked == true) {
+        rooms.forEach(function (room) {
+            if ($('#status_' + room).text() != 'Available') {
+                $('#item_' + room).hide();
+            }
+        });
+    }
+    else {
+        rooms.forEach(function (room) {
+            $('#item_' + room).show();
+        });
+    }
+}

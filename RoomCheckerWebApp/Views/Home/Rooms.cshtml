@@ -171,22 +171,6 @@ else
     }
     var roomType = 'meet';
     var _tenantId = '@ViewBag.Tenant';
-
-    function ShowAvailableOnly() {
-          var checkBox = document.getElementById("avialableOnlyCheckBox");
-        if (checkBox.checked == true) {
-            rooms.forEach(function (room) {
-                if ($('#status_' + room).text() != 'Available') {
-                    $('#item_' + room).hide();
-                }
-            });
-        }
-        else {
-            rooms.forEach(function (room) {
-                $('#item_' + room).show();
-            });
-        }
-    }
 </script>
 
 <script src="~/js/RoomChecker.js">
