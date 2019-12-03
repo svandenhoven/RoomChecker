@@ -41,5 +41,9 @@
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
   </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="wwwroot\images\rooms\" />
+  </ItemGroup>
 
 </Project>

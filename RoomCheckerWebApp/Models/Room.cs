@@ -21,6 +21,7 @@ namespace RoomChecker.Models
     }
     public class TenantConfig
     {
+        public string ImageContainer { get; set; }
         public string PreferredRoomList { get; set; }
         public bGridConfig bGridConfig { get; set; }
         public PBIConfig PBIConfig { get; set; }

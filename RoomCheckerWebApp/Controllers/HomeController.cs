@@ -162,10 +162,12 @@ namespace RoomChecker.Controllers
         public async Task<IActionResult> Rooms(string tenantName = null)
         {
             _tenantId = GetTenantId(tenantName);
+            _tenantConfig = ReadConfig(_roomsConfig).Result;
 
             var rooms = GetRooms("meet");
             ViewBag.Message = "";
             ViewBag.Tenant = tenantName;
+            ViewBag.ImageContainer = _tenantConfig.ImageContainer;
             return View(rooms);
         }
 
