@@ -5,6 +5,7 @@
 }
 
 <link rel="stylesheet" href="~/css/roomcheckerstyle1.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 @if (!User.Identity.IsAuthenticated)
 {
@@ -140,8 +141,8 @@ else
                     </div>
                     <hr />
                     <div style="align-content:center">
-                        <button type="button" class="btn btn-primary" onclick="javascript:$('#ModalLoc_@(item.Id.Split('@')[0])').modal('show');">?</button>
-                        <button type="button" class="btn btn-primary" onclick="javascript:$('#ModalImg_@(item.Id.Split('@')[0])').modal('show');">View</button>
+                        <button type="button" class="btn btn-primary" onclick="javascript:$('#ModalLoc_@(item.Id.Split('@')[0])').modal('show');"><i class="fa fa-map-pin"></i></button>
+                        <button type="button" class="btn btn-primary" onclick="javascript:$('#ModalImg_@(item.Id.Split('@')[0])').modal('show');"><i class="fa fa-camera"></i></button>
                     </div>
                     <!--
             <div style="align-content:center">
