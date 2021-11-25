@@ -1,0 +1,301 @@
+﻿@model IEnumerable<RoomChecker.Models.Room>
+
+@{
+    ViewData["Title"] = "Rooms at " + DateTime.Now.ToShortTimeString();
+}
+
+@{
+    Layout = "_TeamsLayout";
+}
+
+<link rel="stylesheet" href="~/css/roomcheckerstyle1.css" />
+
+@if (!User.Identity.IsAuthenticated)
+{
+    <p>@(ViewBag.Message)</p>
+    <button id="loginButton" type="button" class="btn btn-primary" onclick="login()">Sign In</button>
+}
+
+<H1 id="timeTitle"></H1>
+
+<button type="button" class="btn btn-primary" onclick="javascript: SetStatus()">Check Now</button>
+<p></p>
+<input type="datetime-local" name="checkTime" id="checkTime" style="visibility:hidden">
+<button type="button" class="btn btn-primary" onclick="javascript: SetStatusOnDate()" style="visibility:hidden">Check Date</button>
+<textarea rows="4" cols="50" id="token" style="visibility:hidden"></textarea>
+<p></p>
+
+@foreach (var floor in Model.GroupBy(r => r.Floor))
+{
+    <p></p>
+    <fieldset class="scheduler-border">
+        <legend class="scheduler-border">Floor @(floor.Key)</legend>
+        @foreach (var item in Model.Where(r => r.Floor == floor.Key))
+        {
+            <div class="gallery" id="item_@(item.Id.Split('@')[0])" onclick="javascript:GetRoomStatus(@(item.Id.Split('@')[0]))">
+                <div id="occupied_@(item.Id.Split('@')[0])" class="label label-default" style="visibility:hidden">&nbsp;</div>
+                <div class="roomName">@(item.Id.Split('@')[0])</div>
+                <div class="badge">@Html.DisplayFor(modelItem => item.Features)</div>
+                <div class="desc">
+                    <div class="status" id="status_@(item.Id.Split('@')[0])">Checking...</div>
+                    <div class="planning" id="planning_@(item.Id.Split('@')[0])">&nbsp;</div>
+                </div>
+                <div id="scheduleLine">
+                    <table border="1" align="center">
+                        <tr>
+                            <td class="td.notfree">
+                                &nbsp;
+                            </td>
+                            <td class="td.free">
+                                &nbsp;
+                            </td>
+                            <td class="td.notfree">
+                                &nbsp;
+                            </td>
+                            <td class="td.free">
+                                &nbsp;
+                            </td>
+                            <td class="td.notfree">
+                                &nbsp;
+                            </td>
+                            <td class="td.notfree">
+                                &nbsp;
+                            </td>
+                            <td class="td.notfree">
+                                &nbsp;
+                            </td>
+                            <td class="td.free">
+                                &nbsp;
+                            </td>
+                            <td class="td.free">
+                                &nbsp;
+                            </td>
+                            <td class="td.free">
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:6px; text-align:center">
+                                8
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                9
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                10
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                11
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                12
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                13
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                14
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                15
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                16
+                            </td>
+                            <td style="font-size:6px; text-align:center">
+                                17
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <span id="label_@(item.Id.Split('@')[0])" class="label label-default">@(item.Type)</span>
+            </div>
+        }
+    </fieldset>
+}
+
+<script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m" crossorigin="anonymous"></script>
+<script src="https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js" integrity="sha384-SNENyRfvDvybst1u0LawETYF6L5yMx5Ya1dIqWoG4UDTZ/5UAMB15h37ktdBbyFh" crossorigin="anonymous"></script>
+<script type="text/javascript">
+    var rooms = [];
+    @foreach (var d in Model)
+    {
+        @:rooms.push("@d.Name");
+    }
+
+    microsoftTeams.initialize();
+    login();
+
+    $(document).ready(function () {
+        var dt = document.getElementById('checkTime');
+        dt.value = getDateString(new Date());
+      });
+
+    function n(n) {
+        return n > 9 ? "" + n : "0" + n;
+
+    }
+
+    function getDateString(dateobj) {
+        var year = dateobj.getFullYear();
+        var month = ("0" + (dateobj.getMonth() + 1)).slice(-2);
+        var date = ("0" + dateobj.getDate()).slice(-2);
+        var hours = ("0" + dateobj.getHours()).slice(-2);
+        var minutes = ("0" + dateobj.getMinutes()).slice(-2);
+        return year + "-" + month + "-" + date + "T" + hours + ":" + minutes;
+    }
+
+    function SetStatus() {
+
+        var t = document.getElementById('token');
+        if (t.innerHTML == '') {
+            t.innerHTML = localStorage.accessToken;
+        }
+
+        var accessToken = t.value;
+
+        var dt = document.getElementById('checkTime');
+        dt.value = getDateString(new Date());
+        $('#timeTitle').text('Rooms available at ' + n(new Date().getHours()) + ":" + n(new Date().getMinutes()));
+
+        rooms.forEach(function (room) {
+            GetRoomStatus(room, accessToken);
+        });
+
+    }
+
+    function GetRoomStatus(id, accessToken) {
+        var dt = document.getElementById('checkTime');
+        dt.value = getDateString(new Date());
+        GetRoomStatusOnDate(accessToken, id, true);
+    }
+
+    function GetRoomStatusOnDate(accessToken, id, showbGrid) {
+        var cell = document.getElementById('item_' + id);
+        cell.style.backgroundColor = "";
+        $('#status_' + id).text('Refreshing');
+        $('#planning_' + id).text('...');
+
+
+        var dt = document.getElementById('checkTime').value + ':00';
+        var dtDate = new Date(Date.parse(dt));
+        var endDate = getDateString(new Date(dtDate.getFullYear(), dtDate.getMonth(), dtDate.getDate(), 23, 59, 59));
+
+        var api = 'https://graph.microsoft.com/v1.0/users/cfne' + id + '@@microsoft.com/calendarView?startDateTime=' + dt + '&endDateTime=' + endDate +'&$Select=Start,End,Subject';
+
+        $.ajax({
+            url: api,
+            beforeSend: function (request) {
+                request.setRequestHeader("Authorization", "Bearer " + accessToken);
+            },
+            success: function (schedule) {
+                if (schedule.value.length == 0) {
+                    var cell = document.getElementById('item_' + id);
+                    cell.style.backgroundColor = "lightgreen";
+                }
+                else {
+                    var cell = document.getElementById('item_' + id);
+                    cell.style.backgroundColor = "pink";
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                var cell = document.getElementById('item_' + id);
+                cell.style.backgroundColor = "lightgray";
+                //console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+            },
+        });
+
+        //$.getJSON("/Home/GetRoomStatusOnDate",
+        //    {
+        //        roomId: id,
+        //        dateTime: dt
+        //    },
+        //    function (data) {
+        //        if (data.available) {
+
+        //            $('#status_' + id).text('Free');
+        //            if (data.freeUntil != '0001-01-01T00:00:00')
+        //                $('#planning_' + id).text('until ' + data.freeUntil.substring(11, 16));
+        //            else {
+        //                if (data.freeAt != '0001-01-01T00:00:00') {
+        //                    $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
+        //                }
+        //                else {
+        //                    $('#planning_' + id).text('rest of day');
+        //                }
+        //            }
+
+        //            var cell = document.getElementById('item_' + data.name);
+        //            cell.style.backgroundColor = "lightgreen";
+
+        //        }
+        //        else {
+        //            $('#status_' + id).text('Reserved');
+        //            if (data.freeAt != '0001-01-01T00:00:00')
+        //                $('#planning_' + id).text('Free at ' + data.freeAt.substring(11, 16));
+        //            else
+        //                $('#planning_' + id).text('rest of day');
+        //            var cell = document.getElementById('item_' + data.name);
+        //            cell.style.backgroundColor = "pink";
+        //        }
+
+        //        var label = document.getElementById('occupied_' + data.name);
+        //        if (showbGrid) {
+
+        //            switch (data.occupied) {
+        //                case 0:
+        //                    label.className = 'label label-success';
+        //                    label.style.visibility = "visible";
+        //                    break;
+        //                case 1:
+        //                    label.className = 'label label-warning';
+        //                    label.style.visibility = "visible";
+        //                    break;
+        //                case 2:
+        //                    label.className = 'label label-danger';
+        //                    label.style.visibility = "visible";
+        //                    break;
+        //                default:
+        //                    label.className = 'label label-default';
+        //                    label.style.visibility = "hidden";
+        //                    break;
+        //            }
+        //        }
+        //        else {
+        //            label.className = 'label label-default';
+        //            label.style.visibility = "hidden";
+        //        }
+        //    });
+    }
+
+
+    // Login to Azure AD and get access to Microsoft Graph
+    function login() {
+
+        microsoftTeams.authentication.authenticate({
+            url: window.location.origin + "/Auth/SilentStart",
+            width: 600,
+            height: 535,
+            successCallback: function (result) {
+                console.log("Login succeeded: " + result);
+                logonSuccess(result.accessToken);
+            },
+            failureCallback: function (reason) {
+                console.log("Login failed: " + reason);
+                logonFailed(reason);
+            }
+        });
+    }
+
+    function logonSuccess(accessToken) {
+        $("#loginButton").css({ display: "none" });
+        localStorage.accessToken = accessToken;
+        SetStatus();
+    }
+
+
+    function logonFailed() {
+
+    }
+
+</script>

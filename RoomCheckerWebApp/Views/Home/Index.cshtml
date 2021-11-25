@@ -1,0 +1,14 @@
+﻿<!--  Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license.
+        See LICENSE in the source repository root for complete license information. -->
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<script src="https://unpkg.com/@@microsoft/mgt/dist/bundle/mgt-loader.js"></script>
+<mgt-msal-provider client-id="f0a4caf8-7fd6-4254-a037-720a6e6c8b55"></mgt-msal-provider>
+<mgt-login></mgt-login>
+
+<mgt-person person-query="me" person-card="hover"></mgt-person>
+<mgt-people show-max="4">
+</mgt-people>

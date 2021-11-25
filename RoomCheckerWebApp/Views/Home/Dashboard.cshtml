@@ -1,0 +1,61 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<script src="https://npmcdn.com/es6-promise@3.2.1"></script>
+<script src="~/scripts/powerbi.js"></script>
+
+<script type="text/javascript">
+
+    //This code is for sample purposes only.
+
+    //Configure IFrame for the Report after you have an Access Token. See Default.aspx.cs to learn how to get an Access Token
+    window.onload = function () {
+        var accessToken = '@(ViewBag.AccessToken)';
+
+        if (!accessToken || accessToken == "") {
+            return;
+        }
+
+        var embedUrl = '@(ViewBag.EmbedUrl)';
+        var reportId = '@(ViewBag.ReportId)';
+
+        // Embed configuration used to describe the what and how to embed.
+        // This object is used when calling powerbi.embed.
+        // This also includes settings and options such as filters.
+        // You can find more information at https://github.com/Microsoft/PowerBI-JavaScript/wiki/Embed-Configuration-Details.
+        var config = {
+            type: 'report',
+            accessToken: accessToken,
+            embedUrl: embedUrl,
+            id: reportId,
+            settings: {
+                filterPaneEnabled: false,
+                navContentPaneEnabled: true
+            }
+        };
+
+        // Grab the reference to the div HTML element that will host the report.
+        var reportContainer = document.getElementById('reportContainer');
+
+        // Embed the report and display it within the div container.
+        var report = powerbi.embed(reportContainer, config);
+    };
+</script>
+
+<h2>Occupancy Dashboard</h2>
+@if (!User.Identity.IsAuthenticated)
+{
+    <div style="padding-bottom:60.25%; position:relative; display:block; width: 100%">
+        <p>The user is not not authorized to see this page.</p>
+    </div>
+}
+else
+{
+    <div style="padding-bottom:60.25%; position:relative; display:block; width: 100%">
+        <div ID="reportContainer" style="position:absolute; top:0; left: 0; width:100%; height:100%"></div>
+    </div>
+}
+
+
+

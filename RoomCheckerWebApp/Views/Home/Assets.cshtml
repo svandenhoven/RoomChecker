@@ -1,0 +1,75 @@
+﻿@model IEnumerable<RoomChecker.Models.bGridAsset>
+
+@{
+    ViewData["Title"] = "Assets";
+    string lastSeenStr = "";
+    string assetTypeIcon = "";
+}
+
+<link rel="stylesheet" href="~/css/roomcheckerstyle1.css" />
+
+<h2>Assets</h2>
+@foreach (var floor in Model.Where(asset => asset.inBuilding == true).GroupBy(a => a.floor))
+{
+<div id="F-@floor.Key" class="collapse in">
+    <fieldset class="scheduler-border">
+        <legend class="scheduler-border">Assets on floor @floor.Key</legend>
+        @foreach (var item in Model.Where(r => r.floor == floor.Key && r.inBuilding == true))
+        {
+            lastSeenStr = item.lastSeenDT.ToString("dd MMM HH:mm");
+            <!-- Modal -->
+            <div id="Modal_@(item.id)" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h3 class="modal-title">Floor @(floor.Key), Asset @(item.assetName)</h3>
+                        </div>
+                        <div class="modal-body">
+                            <p>
+                                Last seen on @lastSeenStr
+                            </p>
+                            <div style="position: relative; left: 0; top: 0;">
+                                @switch (floor.Key)
+                                {
+                                    case 0:
+                                        <img src="~/images/floor@(floor.Key).png" width="300" height="200" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.x))*(300/60)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
+                                        break;
+                                    case 1:
+                                        <img src="~/images/floor@(floor.Key).png" width="300" height="400" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((60-Math.Abs(item.x))*(300/60)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
+                                        break;
+                                    case 2:
+                                    case 3:
+                                        <img src="~/images/floor@(floor.Key).png" width="300" height="400" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.x))*(300/45)))px; top: @(Convert.ToInt16(item.y*-1)*(400/75))px;" />
+                                        break;
+                                    case 4:
+                                        <img src="~/images/floor@(floor.Key).png" width="300" height="400" />
+                                        <img id="@(item.id)_dot" src="~/images/dotGreen.png" style="position: absolute; left: @(Convert.ToInt16((45-Math.Abs(item.x))*(300/25)))px; top: @(Convert.ToInt16(item.y*-1)*(400/45))px;" />
+                                        break;
+                                };
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="gallery" id="item_@(item.id)" onclick="javascript:$('#Modal_@(item.id)').modal('show'); ">
+                <div class="image"><img src="~/images/@Html.DisplayFor(modelItem => item.assetType)" /></div>
+                <div class="roomName">@Html.DisplayFor(modelItem => item.assetName)</div>
+                <div class="capacity">@lastSeenStr</div>
+            </div>
+        }
+    </fieldset>
+    </div>
+ }
+
+
