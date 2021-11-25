@@ -1,6 +1,6 @@
 {
   "bGridConfig": {
-    "bGridUser": "...",
+    "bGridUser": "ignore",
     "bGridPW": "...",
     "bGridEndPoint": "..."
   },
